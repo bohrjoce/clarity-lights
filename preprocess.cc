@@ -7,7 +7,7 @@ using namespace cv;
 // Global vars, params
 const string outputPath = "preprocess-output/preprocessed_image.jpg";
 const string face_cascade_name = "res/haarcascade_frontalface_alt.xml";
-const Size finalSize(100, 100); // Todo: tune this param
+const Size finalSize(48, 48);
 
 // Main
 int main(int argc, char** argv ) {
@@ -38,7 +38,7 @@ int main(int argc, char** argv ) {
         return -1;
     }
     
-    // Convert to black and white
+    // Convert to grayscale
     cvtColor(image, imageGray, COLOR_BGR2GRAY);
     equalizeHist(imageGray, imageGray);
 
