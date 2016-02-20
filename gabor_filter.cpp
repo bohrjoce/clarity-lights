@@ -24,11 +24,11 @@ Mat ImageToFV(Mat inputImage, float stddev, int filtSize)
     Mat image;
     inputImage.convertTo(image,CV_32F); 
     float wavelength = 2.0; 
-    namedWindow( "Filter", WINDOW_AUTOSIZE ); // Create a window for display.
+    //namedWindow( "Filter", WINDOW_AUTOSIZE ); // Create a window for display.
     // namedWindow( "Input", WINDOW_AUTOSIZE ); // Create a window for display.
-    namedWindow( "imOutput", WINDOW_AUTOSIZE ); // Create a window for display.
+    //namedWindow( "imOutput", WINDOW_AUTOSIZE ); // Create a window for display.
 
-    cout << "stddev is "<< stddev << endl;
+    //cout << "stddev is "<< stddev << endl;
     for (int i =1; i < 6; i++){
 
         for (int j = 0; j < 8; j++){
@@ -41,21 +41,21 @@ Mat ImageToFV(Mat inputImage, float stddev, int filtSize)
                     0 //phase offset of sinusoids, who cares
                     // ,CV_32F //filter type, either CV_32F or CV_64F
                     );
-           filter2D(
+            filter2D(
                     image, //input image
                     filterOutput, //output of filter
                     CV_32F, //desired depth of output
                     filter  //filter to be convolved with input
                     );
-            cout << " wavelength is " << wavelength << "\nphase is " << pi*j/8.0 <<endl;
-           featureVector.push_back(filterOutput);
-           filterOutput.convertTo(imOutput, CV_8U,1.0/255.0);
-           imshow( "imOutput", imOutput);
-           imshow( "Filter", filter);
-           waitKey(0); // Wait for a keystroke
+            //         cout << " wavelength is " << wavelength << "\nphase is " << pi*j/8.0 <<endl;
+            featureVector.push_back(filterOutput);
+            //filterOutput.convertTo(imOutput, CV_8U,1.0/255.0);
+            //imshow( "imOutput", imOutput);
+            //imshow( "Filter", filter);
+            //     waitKey(0); // Wait for a keystroke
 
         }
-                //halfoctave increment
+        //halfoctave increment
         wavelength = 1.5*(1<<i);
     }
     featureVector = featureVector.reshape(1,1); 
