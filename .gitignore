@@ -1,4 +1,5 @@
 svm
-preprocess
+test
+*.o
 preprocess-output/
 res/

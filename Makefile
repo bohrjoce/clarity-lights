@@ -8,7 +8,10 @@ svm: svm.cc
 	$(CC) $(CFLAGS) svm.cc -o $@ $(LIBS)
 
 preprocess: preprocess.cc
-	$(CC) $(CFLAGS) preprocess.cc -o $@ $(LIBS)
+	$(CC) $(CFLAGS) preprocess.cc -c $(LIBS)
+
+test: test.cc preprocess.o
+	$(CC) $(CFLAGS) test.cc preprocess.cc -o $@ $(LIBS)
 
 clean:
-	rm -rf svm preprocess
+	rm -rf *.o svm test
