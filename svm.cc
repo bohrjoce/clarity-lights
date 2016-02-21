@@ -1,52 +1,63 @@
+/*#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/ml.hpp>*/
 #include <opencv2/opencv.hpp>
 #include <iostream>
 
+using namespace cv;
+using namespace ml;
+
 int main() {
-  /* Read data from csv file into CvMat */
-  CvMLData data;
-  data.read_csv("iris.csv");
-  const CvMat* data_mat1 = data.get_values();
-  cv::Mat data_mat = cv::Mat(data_mat1, true);
+  int height = 512, width = 512;
+  Mat image = Mat::zeros(height, width, CV_8UC3);
 
-  CvMLData target;
-  target.read_csv("iris_labels.csv");
-  const CvMat* target_mat1 = target.get_values();
-  cv::Mat target_mat = cv::Mat(target_mat1, true);
+  // set up training data
+  int labels[4] = {1, -1, -1, -1};
+  Mat labelsMat(4, 1, CV_32S, labels);
+  float trainingData[4][2] = { {501, 10}, {255, 10}, {501, 255}, {10, 501} };
+  Mat trainingDataMat(4, 2, CV_32FC1, trainingData);
 
-  /* Partition data into train/test sets */
-  cv::Mat train_x = data_mat.rowRange(0, data_mat.rows-10);
-  cv::Mat train_t = target_mat.rowRange(0, target_mat.rows-10);
-  cv::Mat test_x = data_mat.rowRange(data_mat.rows-10, data_mat.rows);
-  cv::Mat test_t = target_mat.rowRange(target_mat.rows-10, target_mat.rows);
-  CvSVM svm;
-  CvSVMParams params(
-                      CvSVM::C_SVC,    /* Type of SVM, here multiclass */
-                      CvSVM::LINEAR,   /* kernel type */
-                      0.0,  /* kernel param (degree), poly kernel only */
-                      0.0,  /* kernel param (gamma), poly/rbf kernel only */
-                      0.0,  /* kernel param (coef0), poly/sigmoid kernel only */
-                      10,   /* SVM optimization param C */
-                      0,    /* SVM optimization param nu (not used for
-                               multiclass) */
-                      0,    /* SVM optimization param p (not used for
-                               multiclass) */
-                      NULL, /* class weights (or priors), optional */
+  // train svm
+  Ptr<SVM> svm = SVM::create();
+  svm->setType(SVM::C_SVC);
+  svm->setKernel(SVM::LINEAR);
+  svm->setGamma(3);
 
-                      /* termination criteria for learning algorithm */
-                      cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 1000,
-                                     0.000001)
-                    );
-  svm.train(train_x, train_t, cv::Mat(), cv::Mat(), params);
-  // initialize to zeros using target_mat[0:10]. For some reason default
-  // cv::Mat constructor results in segfault
-  CvMat result_t_cvmat = target_mat.rowRange(0,10);
-  const CvMat test_x_cvmat = test_x;
-  svm.predict(&test_x_cvmat, &result_t_cvmat);
-  cv::Mat result_t = cv::Mat(&result_t_cvmat, true);
-  int correct = 0;
-  for (int i = 0; i < test_t.rows; ++i) {
-    if ((int)result_t.at<float>(i) == (int)test_t.at<float>(i)) ++correct;
+  svm->train(trainingDataMat, ROW_SAMPLE, labelsMat);
+  Vec3b green (0,255,0), blue (255,0,0);
+  // show decision regions given by svm
+
+  for (int i = 0; i < image.rows; ++i) {
+    for (int j = 0; j < image.cols; ++j) {
+      float sample[2] = {(float)j, (float)i};
+      Mat sampleMat(1, 2, CV_32FC1, sample);
+      float response = svm->predict(sampleMat);
+
+      if ((int)response == 1) image.at<Vec3b>(i,j) = green;
+      else if ((int)response == -1) image.at<Vec3b>(i,j) = blue;
+    }
   }
-  double accuracy = (double)correct/(double)test_t.rows;
-  std::cout << "accuracy: " << accuracy << "\n";
+
+  // show training data
+  int thickness = -1;
+  int lineType = 8;
+  circle( image, Point(501,  10), 5, Scalar(  0,   0,   0), thickness, lineType );
+  circle( image, Point(255,  10), 5, Scalar(255, 255, 255), thickness, lineType );
+  circle( image, Point(501, 255), 5, Scalar(255, 255, 255), thickness, lineType );
+  circle( image, Point(10 , 501), 5, Scalar(255, 255, 255), thickness, lineType );
+
+  // show support vectors
+  thickness = 2;
+  lineType = 8;
+  Mat sv = svm->getSupportVectors();
+
+  for (int i = 0; i < sv.rows; ++i) {
+    const float* v = sv.ptr<float>(i);
+    circle( image, Point( (int) v[0], (int) v[1]), 6, Scalar(128, 128, 128), thickness, lineType );
+  }
+  imwrite("result.png", image);
+  imshow("SVM simple example", image);
+  waitKey(0);
 }
