@@ -7,11 +7,11 @@ default: svm
 svm: svm.cc
 	$(CC) $(CFLAGS) svm.cc -o $@ $(LIBS)
 
-preprocess: preprocess.cc
+preprocess.o: preprocess.cc preprocess.h
 	$(CC) $(CFLAGS) preprocess.cc -c $(LIBS)
 
 test: test.cc preprocess.o
-	$(CC) $(CFLAGS) test.cc preprocess.cc -o $@ $(LIBS)
+	$(CC) $(CFLAGS) test.cc preprocess.o -o $@ $(LIBS)
 
 clean:
 	rm -rf *.o svm test
