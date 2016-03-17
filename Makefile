@@ -1,8 +1,11 @@
 CC = g++
-LIBS = $(shell pkg-config --libs opencv)
-CFLAGS = -g -Wall -Werror -std=c++11 $(shell pkg-config --cflags opencv)
 
-default: filesystem
+OPENCV_LIBS = -L/usr/local/lib -lopencv_shape -lopencv_stitching -lopencv_objdetect -lopencv_superres -lopencv_videostab -lopencv_calib3d -lopencv_features2d -lopencv_highgui -lopencv_videoio -lopencv_imgcodecs -lopencv_video -lopencv_photo -lopencv_ml -lopencv_imgproc -lopencv_flann -lopencv_core -lopencv_hal
+LIBS = $(OPENCV_LIBS)
+OPENCV_FLAGS = -I/usr/local/include/opencv -I/usr/local/include
+CFLAGS = -g -Wall -Werror -std=c++11 $(OPENCV_FLAGS)
+
+default: test
 
 svm: svm.cc
 	$(CC) $(CFLAGS) svm.cc -o $@ $(LIBS)
