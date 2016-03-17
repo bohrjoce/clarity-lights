@@ -28,7 +28,7 @@ int main(int argc, char** argv ) {
     // Load cascade
     if (!faceCascade.load(face_cascade_name)){
         printf("Error loading cascade\n");
-        return -1; 
+        return -1;
     }
 
     // Read in image
@@ -37,7 +37,7 @@ int main(int argc, char** argv ) {
         printf("Image not found\n");
         return -1;
     }
-    
+
     // Convert to grayscale
     cvtColor(image, imageGray, COLOR_BGR2GRAY);
     equalizeHist(imageGray, imageGray);
