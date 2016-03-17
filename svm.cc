@@ -1,15 +1,28 @@
-/*#include <opencv2/core.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/ml.hpp>*/
 #include <opencv2/opencv.hpp>
 #include <iostream>
+#include <boost/filesystem.hpp>
+#include <vector>
 
 using namespace cv;
 using namespace ml;
+using namespace fs = boost::filesystem
+
+const char * datapath = "cohn-kanade/";
 
 int main() {
+
+  fs::path p(datapath);
+  if (!exists(p) || !is_directory(p)) {
+    std::cout << datapath << " does not exist\n";
+    return -1;
+  }
+  fs::recursive_directory_iterator begin(p), end;
+  std::vector<fs::directory_entry> v(begin, end);
+  std::cout << "there are " << v.size() << " files\n";
+  for (auto& f: v)
+    std::cout << f << "\n";
+  return 0;
+
   int height = 512, width = 512;
   Mat image = Mat::zeros(height, width, CV_8UC3);
 

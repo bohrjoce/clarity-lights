@@ -1,24 +1,14 @@
-#include <stdio.h>
-#include <opencv2/opencv.hpp>
+#include "preprocess.h"
 
 using namespace std;
 using namespace cv;
 
-// Global vars, params
-const string outputPath = "preprocess-output/preprocessed_image.jpg";
-const string face_cascade_name = "res/haarcascade_frontalface_alt.xml";
-const Size finalSize(48, 48);
+// Consts
+static const string outputPath = "preprocess-output/preprocessed_image.jpg";
+static const string face_cascade_name = "res/haarcascade_frontalface_alt.xml";
+static const Size finalSize(48, 48);
 
-// Main
-int main(int argc, char** argv ) {
-
-    // Command line args
-    if (argc < 2)
-    {
-        printf("Did not specify image\n");
-        return -1;
-    }
-
+int preprocess(string imagePath, Mat &output) {
     // Vars
     Mat image, imageGray, face;
     vector<Rect> faces;
@@ -27,15 +17,15 @@ int main(int argc, char** argv ) {
 
     // Load cascade
     if (!faceCascade.load(face_cascade_name)){
-        printf("Error loading cascade\n");
-        return -1;
+        printf("Error: unable to load cascade\n");
+        exit(1); // Todo: better error handling
     }
 
     // Read in image
-    image = imread(argv[1], 1);
+    image = imread(imagePath, 1);
     if (!image.data) {
-        printf("Image not found\n");
-        return -1;
+        printf("Error: image not found\n");
+        exit(1);
     }
 
     // Convert to grayscale
@@ -46,7 +36,7 @@ int main(int argc, char** argv ) {
     faceCascade.detectMultiScale(imageGray, faces, 1.1, 2, 0|CASCADE_SCALE_IMAGE, Size(48, 48));
     if (!faces.size()) {
         printf("No face detected\n");
-        return 0;
+        return -1;
     }
     int largestArea = 0, area;
     for(size_t i = 0; i < faces.size(); i++) {
@@ -59,14 +49,9 @@ int main(int argc, char** argv ) {
         }
     }
 
-    // Crop, resize, and write image to disk
+    // Crop, resize, and return face
     face = imageGray(faceBoundary);
     resize(face, face, finalSize);
-    imwrite(outputPath, face);
-
-    // Display detected face
-    imshow("Face Detected", face);
-    waitKey(0);
-
+    output = face;
     return 0;
 }
