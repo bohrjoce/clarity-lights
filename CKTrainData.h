@@ -31,6 +31,7 @@ class CKTrainData {
     void init();
     void print_filenames();
     void print_labels();
+    void check_data();
     vector< vector< vector< string >>> filenames;
     vector< vector< int >> labels;
     string get_filename(int speaker, int sequence, int image);

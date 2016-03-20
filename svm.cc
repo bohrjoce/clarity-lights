@@ -17,12 +17,12 @@ int main() {
 
   CKTrainData ckdata;
   ckdata.init();
-  Mat train_x(0, 0, CV_32F);
-  Mat train_t(0, 0, CV_32F);
-  Mat test_x(0, 0, CV_32F);
-  Mat test_t(0, 0, CV_32F);
-  Mat m, gabor_features;
 
+  Mat train_x(0, 0, CV_32F);
+  Mat train_t(0, 0, CV_32SC1);
+  Mat test_x(0, 0, CV_32F);
+  Mat test_t(0, 0, CV_32SC1);
+  Mat m, gabor_features;
   for (unsigned int i = 0; i < ckdata.filenames.size(); ++i) {
     for (unsigned int j = 0; j < ckdata.filenames[i].size(); ++j) {
       if (ckdata.labels[i][j] == -1) continue;
@@ -35,10 +35,10 @@ int main() {
       // test generalization to new subjects
       if (i % 9) {
         train_x.push_back(gabor_features);
-        train_t.push_back(Mat(1, 1, CV_32F, ckdata.labels[i][j]));
+        train_t.push_back(Mat(1, 1, CV_32SC1, ckdata.labels[i][j]));
       } else {
         test_x.push_back(gabor_features);
-        test_t.push_back(Mat(1, 1, CV_32F, ckdata.labels[i][j]));
+        test_t.push_back(Mat(1, 1, CV_32SC1, ckdata.labels[i][j]));
       }
 
       if (preprocess(ckdata.filenames[i][j][end-1], m) != 0) {
@@ -49,10 +49,10 @@ int main() {
       // test generalization to new subjects
       if (i % 9) {
         train_x.push_back(gabor_features);
-        train_t.push_back(Mat(1, 1, CV_32F, ckdata.labels[i][j]));
+        train_t.push_back(Mat(1, 1, CV_32SC1, ckdata.labels[i][j]));
       } else {
         test_x.push_back(gabor_features);
-        test_t.push_back(Mat(1, 1, CV_32F, ckdata.labels[i][j]));
+        test_t.push_back(Mat(1, 1, CV_32SC1, ckdata.labels[i][j]));
       }
     }
   }
@@ -66,20 +66,22 @@ int main() {
   Mat trainingDataMat(4, 2, CV_32FC1, trainingData);*/
 
   // train svm
-
   Ptr<SVM> svm = SVM::create();
   svm->trainAuto(TrainData::create(train_x, ROW_SAMPLE, train_t));
-  cout << "finished training\n";
-/*  svm->setType(SVM::C_SVC);
+  /*
+  svm->setType(SVM::C_SVC);
   svm->setKernel(SVM::LINEAR);
   svm->setGamma(3);
 
   svm->train(train_x, ROW_SAMPLE, train_t);*/
 
+  cout << "finished training\n";
+
   int correct = 0;
   for (int i = 0; i < test_x.rows; ++i) {
-    int response = svm->predict(test_x.at<Mat>(i));
-    if (response == test_t.at<int>(i)) ++correct;
+    int response = svm->predict(test_x.row(i));
+    cout << response << " vs " << (int)test_t.at<int>(i) << endl;
+    if (response == (int)test_t.at<int>(i)) ++correct;
   }
   double accuracy = (double)correct/(double)test_x.rows;
 
