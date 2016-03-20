@@ -23,6 +23,8 @@ void CKTrainData::iterate_ck_images() {
 
       // cohn-kanade/cohn-kanade-images/SXXX/YYY/abc.jpg
       BOOST_FOREACH(fs::path const &filename, std::make_pair(it2, eod2)) {
+        string extension = filename.string().substr(filename.string().size()-4, 4);
+        if (extension != ".png") continue;
         filenames[i][j].push_back(filename.string());
       }
       ++j;
@@ -54,6 +56,8 @@ void CKTrainData::iterate_ck_labels() {
 
       // cohn-kanade/cohn-kanade-images/SXXX/YYY/label.txt
       BOOST_FOREACH(fs::path const &filename, std::make_pair(it2, eod2)) {
+        string extension = filename.string().substr(filename.string().size()-4, 4);
+        if (extension != ".txt") continue;
         ifstream ifn;
         int value;
         ifn.open(filename.string());

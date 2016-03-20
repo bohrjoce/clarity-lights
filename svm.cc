@@ -53,7 +53,7 @@ int main() {
       }
     }
   }
-
+  cout << "finished preprocessing\n";
 /*  // set up training data
   // TODO: replace dummy data with cohn-kanade data. get filenames, preprocess,
   // extract gabor features
@@ -65,6 +65,7 @@ int main() {
   // train svm
   Ptr<SVM> svm = SVM::create();
   svm->trainAuto(TrainData::create(train_x, ROW_SAMPLE, train_t));
+  cout << "finished training\n";
 /*  svm->setType(SVM::C_SVC);
   svm->setKernel(SVM::LINEAR);
   svm->setGamma(3);
