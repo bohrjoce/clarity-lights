@@ -24,8 +24,6 @@ const string ck_dir = "cohn-kanade/";
 
 class CKTrainData {
   private:
-    vector< vector< vector< string >>> filenames;
-    vector< vector< vector< int >>> labels;
     void iterate_ck_images();
     void iterate_ck_labels();
 
@@ -33,6 +31,8 @@ class CKTrainData {
     void init();
     void print_filenames();
     void print_labels();
+    vector< vector< vector< string >>> filenames;
+    vector< vector< int >> labels;
     string get_filename(int speaker, int sequence, int image);
     int get_label(int speaker, int sequence, int image);
 };
