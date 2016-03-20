@@ -9,7 +9,7 @@ CFLAGS = -g -Wall -Werror -std=c++11 $(OPENCV_FLAGS)
 default: svm
 
 svm: svm.cc preprocess.cc CKTrainData.cc
-	$(CC) $(CFLAGS) svm.cc preprocess.cc CKTrainData.cc -std=c++11 -o $@ $(LIBS)
+	$(CC) $(CFLAGS) svm.cc preprocess.cc CKTrainData.cc gabor_filter.cpp -std=c++11 -o $@ $(LIBS)
 
 preprocess.o: preprocess.cc preprocess.h
 	$(CC) $(CFLAGS) preprocess.cc -c $(LIBS)
