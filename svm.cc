@@ -10,16 +10,6 @@ using namespace cv;
 using namespace ml;
 using namespace std;
 
-bool fileExists(const char *fileName)
-{
-    ifstream file(fileName);
-    if (file.good()) {
-
-    }
-    file.close()
-    return file.good();
-}
-
 int main() {
 
   int height = 512, width = 512;
@@ -84,11 +74,11 @@ int main() {
   svm->setGamma(3);
 
   // Train model on cohn-kanade and save xml
-  // svm->train(train_x, ROW_SAMPLE, train_t);
-  // svm->save("res/svm.xml");
-
+  svm->train(train_x, ROW_SAMPLE, train_t);
+  svm->save("res/svm.xml");
+  // OR
   // Load trained svm model
-  svm = StatModel::load<SVM>("res/svm.xml");
+  // svm = StatModel::load<SVM>("res/svm.xml");
 
   cout << "finished training, model saved in svm.xml\n";
 
