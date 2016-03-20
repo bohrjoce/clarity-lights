@@ -3,3 +3,4 @@ test
 *.o
 preprocess-output/
 res/
+cohn-kanade/
