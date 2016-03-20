@@ -10,6 +10,16 @@ using namespace cv;
 using namespace ml;
 using namespace std;
 
+bool fileExists(const char *fileName)
+{
+    ifstream file(fileName);
+    if (file.good()) {
+
+    }
+    file.close()
+    return file.good();
+}
+
 int main() {
 
   int height = 512, width = 512;
@@ -73,9 +83,14 @@ int main() {
   svm->setKernel(SVM::LINEAR);
   svm->setGamma(3);
 
-  svm->train(train_x, ROW_SAMPLE, train_t);
+  // Train model on cohn-kanade and save xml
+  // svm->train(train_x, ROW_SAMPLE, train_t);
+  // svm->save("res/svm.xml");
 
-  cout << "finished training\n";
+  // Load trained svm model
+  svm = StatModel::load<SVM>("res/svm.xml");
+
+  cout << "finished training, model saved in svm.xml\n";
 
   int correct = 0;
   for (int i = 0; i < test_x.rows; ++i) {
@@ -119,4 +134,11 @@ int main() {
   imwrite("result.png", image);
   imshow("SVM simple example", image);
   waitKey(0);*/
+
+  Mat result, g1;
+  if (preprocess("res/happy.jpg", result) == 0) {
+    g1 = ImageToFV(result);
+    float response = svm->predict(g1);
+    cout << "Response: " << response << endl;
+  }
 }
