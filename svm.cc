@@ -17,10 +17,10 @@ int main() {
 
   CKTrainData ckdata;
   ckdata.init();
-  Mat train_x;
-  Mat train_t;
-  Mat test_x;
-  Mat test_t;
+  Mat train_x(0, 0, CV_32F);
+  Mat train_t(0, 0, CV_32F);
+  Mat test_x(0, 0, CV_32F);
+  Mat test_t(0, 0, CV_32F);
   Mat m, gabor_features;
 
   for (unsigned int i = 0; i < ckdata.filenames.size(); ++i) {
@@ -35,10 +35,10 @@ int main() {
       // test generalization to new subjects
       if (i % 9) {
         train_x.push_back(gabor_features);
-        train_t.push_back(Mat(1, 1, CV_32FC1, ckdata.labels[i][j]));
+        train_t.push_back(Mat(1, 1, CV_32F, ckdata.labels[i][j]));
       } else {
         test_x.push_back(gabor_features);
-        test_t.push_back(Mat(1, 1, CV_32FC1, ckdata.labels[i][j]));
+        test_t.push_back(Mat(1, 1, CV_32F, ckdata.labels[i][j]));
       }
 
       if (preprocess(ckdata.filenames[i][j][end-1], m) != 0) {
@@ -49,13 +49,12 @@ int main() {
       // test generalization to new subjects
       if (i % 9) {
         train_x.push_back(gabor_features);
-        train_t.push_back(Mat(1, 1, CV_32FC1, ckdata.labels[i][j]));
+        train_t.push_back(Mat(1, 1, CV_32F, ckdata.labels[i][j]));
       } else {
         test_x.push_back(gabor_features);
-        test_t.push_back(Mat(1, 1, CV_32FC1, ckdata.labels[i][j]));
+        test_t.push_back(Mat(1, 1, CV_32F, ckdata.labels[i][j]));
       }
     }
-    break;
   }
   cout << "finished preprocessing\n";
 /*  // set up training data
