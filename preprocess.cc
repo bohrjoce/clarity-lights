@@ -4,7 +4,6 @@ using namespace std;
 using namespace cv;
 
 // Consts
-static const string outputPath = "preprocess-output/preprocessed_image.jpg";
 static const string face_cascade_name = "res/haarcascade_frontalface_alt.xml";
 static const Size finalSize(48, 48);
 
