@@ -17,7 +17,6 @@ int main() {
 
   CKTrainData ckdata;
   ckdata.init();
-
   Mat train_x(0, 0, CV_32F);
   Mat train_t(0, 0, CV_32SC1);
   Mat test_x(0, 0, CV_32F);
@@ -25,7 +24,8 @@ int main() {
   Mat m, gabor_features;
   for (unsigned int i = 0; i < ckdata.filenames.size(); ++i) {
     for (unsigned int j = 0; j < ckdata.filenames[i].size(); ++j) {
-      if (ckdata.labels[i][j] == -1) continue;
+      // ignore unlabeled examples and examples labeled contempt
+      if (ckdata.labels[i][j] == -1 || ckdata.labels[i][j] == 2) continue;
       if (preprocess(ckdata.filenames[i][j][0], m) != 0) {
         cout << "preprocess failed: " << ckdata.filenames[i][j][0] << endl;
         exit(1);
@@ -33,12 +33,13 @@ int main() {
       gabor_features = ImageToFV(m);
       unsigned int end = ckdata.filenames[i][j].size();
       // test generalization to new subjects
-      if (i % 9) {
+      // first frame in sequence. label = neutral = 2. 2 was old contempt label
+      if (i % 11) {
         train_x.push_back(gabor_features);
-        train_t.push_back(Mat(1, 1, CV_32SC1, ckdata.labels[i][j]));
+        train_t.push_back(Mat(1, 1, CV_32SC1, 2));
       } else {
         test_x.push_back(gabor_features);
-        test_t.push_back(Mat(1, 1, CV_32SC1, ckdata.labels[i][j]));
+        test_t.push_back(Mat(1, 1, CV_32SC1, 2));
       }
 
       if (preprocess(ckdata.filenames[i][j][end-1], m) != 0) {
@@ -47,7 +48,7 @@ int main() {
       }
       gabor_features = ImageToFV(m);
       // test generalization to new subjects
-      if (i % 9) {
+      if (i % 11) {
         train_x.push_back(gabor_features);
         train_t.push_back(Mat(1, 1, CV_32SC1, ckdata.labels[i][j]));
       } else {
@@ -67,13 +68,12 @@ int main() {
 
   // train svm
   Ptr<SVM> svm = SVM::create();
-  svm->trainAuto(TrainData::create(train_x, ROW_SAMPLE, train_t));
-  /*
+//  svm->trainAuto(TrainData::create(train_x, ROW_SAMPLE, train_t));
   svm->setType(SVM::C_SVC);
   svm->setKernel(SVM::LINEAR);
   svm->setGamma(3);
 
-  svm->train(train_x, ROW_SAMPLE, train_t);*/
+  svm->train(train_x, ROW_SAMPLE, train_t);
 
   cout << "finished training\n";
 
