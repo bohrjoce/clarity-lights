@@ -12,24 +12,31 @@ using namespace std;
 
 int main() {
 
-  int height = 512, width = 512;
-  Mat image = Mat::zeros(height, width, CV_8UC3);
-
   CKTrainData ckdata;
   ckdata.init();
-  Mat train_x(0, 0, CV_32F);
-  Mat train_t(0, 0, CV_32SC1);
-  Mat test_x(0, 0, CV_32F);
-  Mat test_t(0, 0, CV_32SC1);
+  for (unsigned int i = 0; i < ckdata.filenames.size(); ++i) {
+    for (unsigned int j = 0; j < ckdata.filenames[i].size(); ++j) {
+      Mat m;
+      preprocess(ckdata.filenames[i][j][0], m);
+      namedWindow("Display window.", WINDOW_AUTOSIZE);
+      imshow("Display window.", m);
+      waitKey(0);
+      int end = ckdata.filenames[i][j].size();
+      preprocess(ckdata.filenames[i][j][end-1], m);
+      namedWindow("Display window.", WINDOW_AUTOSIZE);
+      imshow("Display window.", m);
+      waitKey(0);
+    }
+  }
   Mat allSamples(0, 0, CV_32F);
   Mat allLabels(0, 0, CV_32SC1);
 
-  Mat pFeatures;
   Mat m, gabor_features;
   vector<Mat>pFeats;
-  vector<Mat>pLabels; 
+  vector<Mat>pLabels;
   Mat curPersonFeatures(0,0,CV_32F);
   Mat curPersonLabels(0,0,CV_32SC1);
+
   for (unsigned int i = 0; i < ckdata.filenames.size(); ++i) {
     curPersonFeatures.release();
     curPersonLabels.release();
@@ -41,64 +48,47 @@ int main() {
         cout << "preprocess failed: " << ckdata.filenames[i][j][0] << endl;
         exit(1);
       }
-      // cout << "iteration for j is value " << j << endl;
+
       gabor_features = ImageToFV(m);
-      // cout << " size of gabor_features is " << gabor_features.size() << endl; 
-      unsigned int end = ckdata.filenames[i][j].size();
-      // test generalization to new subjects
+      /*  TEST: use raw greyscale instead of gabor
+      gabor_features.release();
+      m.convertTo(gabor_features, CV_32F, 1.0/255.0);
+      gabor_features = gabor_features.reshape(1,1);*/
+
       // first frame in sequence. label = neutral = 2. 2 was old contempt label
-      if (i % 11) {
-        train_x.push_back(gabor_features);
-        train_t.push_back(Mat(1, 1, CV_32SC1, 2));
-      } else {
-        test_x.push_back(gabor_features);
-        test_t.push_back(Mat(1, 1, CV_32SC1, 2));
-      }
       curPersonFeatures.push_back(gabor_features);
       curPersonLabels.push_back(Mat(1, 1, CV_32SC1, 2));
 
+      unsigned int end = ckdata.filenames[i][j].size();
       if (preprocess(ckdata.filenames[i][j][end-1], m) != 0) {
         cout << "preprocess failed: " << ckdata.filenames[i][j][end-1] << endl;
         exit(1);
       }
+
       gabor_features = ImageToFV(m);
-      // test generalization to new subjects
-      if (i % 11) {
-        train_x.push_back(gabor_features);
-        train_t.push_back(Mat(1, 1, CV_32SC1, ckdata.labels[i][j]));
-      } else {
-        test_x.push_back(gabor_features);
-        test_t.push_back(Mat(1, 1, CV_32SC1, ckdata.labels[i][j]));
-      }
+      /*  TEST: use raw greyscale instead of gabor
+      gabor_features.release();
+      m.convertTo(gabor_features,CV_32F, 1.0/255.0);
+      gabor_features = gabor_features.reshape(1,1);*/
+
+      // last frame in sequence. label = ckdata.labels[i][j]
       curPersonFeatures.push_back(gabor_features);
       curPersonLabels.push_back(Mat(1, 1, CV_32SC1, ckdata.labels[i][j]));
     }
     // cout << " persons features size is " << curPersonFeatures.size() << endl;
-    pFeats.push_back(curPersonFeatures); 
+    pFeats.push_back(curPersonFeatures);
     pLabels.push_back(curPersonLabels);
   }
 
-  cout << "pFeats is " << pFeats.size() << endl; 
+  cout << "pFeats is " << pFeats.size() << endl;
   cout << "pLabels is " << pLabels.size() << endl;
-  //for(unsigned int i = 0; i < pFeats.size(); ++i){
-  //  cout << "features size for each person: " << pFeats[0].size() << endl;
-  //}
-  //ckdata.print_labels();
-  /*  // set up training data
-  // TODO: replace dummy data with cohn-kanade data. get filenames, preprocess,
-  // extract gabor features
-  int labels[4] = {1, -1, -1, -1};
-  Mat labelsMat(4, 1, CV_32S, labels);
-  float trainingData[4][2] = { {501, 10}, {255, 10}, {501, 255}, {10, 501} };
-  Mat trainingDataMat(4, 2, CV_32FC1, trainingData);*/
-
 
   // train svm
   Ptr<SVM> svm = SVM::create();
-  //  svm->trainAuto(TrainData::create(train_x, ROW_SAMPLE, train_t));
   svm->setType(SVM::C_SVC);
   svm->setKernel(SVM::LINEAR);
-  svm->setGamma(3);
+  // TODO: get this to work
+  //  svm->trainAuto(TrainData::create(train_x, ROW_SAMPLE, train_t));
   //INIT VALUES:
   //i=174
   //correct = 141
@@ -107,15 +97,19 @@ int main() {
   cout << "started training\n";
 
   int numPeople = pFeats.size();
-  int total = 0;   
+  int total = 0;
+  Mat train_x(0, 0, CV_32F);
+  Mat train_t(0, 0, CV_32SC1);
+  Mat test_x(0, 0, CV_32F);
+  Mat test_t(0, 0, CV_32SC1);
   for(int i = 0; i < numPeople; ++i) {
-    cout << "\n\n leave one out: " << i << endl; 
+    cout << "\n\n leave one out: " << i << endl;
     train_x.release();
     train_t.release();
     test_x.release();
     test_t.release();
     for (int j = 0; j <numPeople; ++j){
-      if(j==i){ 
+      if(j==i){
         test_x.push_back(pFeats[j]);
         test_t.push_back(pLabels[j]);
       }
@@ -141,39 +135,9 @@ int main() {
   double accuracy = (double)correct/(double)total;
 
   cout << "accuracy : " << accuracy << endl;
-  /*
-  // show decision regions given by svm
-  for (int i = 0; i < image.rows; ++i) {
-  for (int j = 0; j < image.cols; ++j) {
-  float sample[2] = {(float)j, (float)i};
-  Mat sampleMat(1, 2, CV_32FC1, sample);
-  float response = svm->predict(sampleMat);
 
-  if ((int)response == 1) image.at<Vec3b>(i,j) = green;
-  else if ((int)response == -1) image.at<Vec3b>(i,j) = blue;
-  }
-  }
-  */
-  /*  // show training data
-      int thickness = -1;
-      int lineType = 8;
-      circle( image, Point(501,  10), 5, Scalar(  0,   0,   0), thickness, lineType );
-      circle( image, Point(255,  10), 5, Scalar(255, 255, 255), thickness, lineType );
-      circle( image, Point(501, 255), 5, Scalar(255, 255, 255), thickness, lineType );
-      circle( image, Point(10 , 501), 5, Scalar(255, 255, 255), thickness, lineType );
-
-  // show support vectors
-  thickness = 2;
-  lineType = 8;
-  Mat sv = svm->getSupportVectors();
-
-  for (int i = 0; i < sv.rows; ++i) {
-  const float* v = sv.ptr<float>(i);
-  circle( image, Point( (int) v[0], (int) v[1]), 6, Scalar(128, 128, 128), thickness, lineType );
-  }
-  imwrite("result.png", image);
-  imshow("SVM simple example", image);
-  waitKey(0);*/
+/*
+  Testing on an external image
 
   // Train model on cohn-kanade and save xml
   svm->train(train_x, ROW_SAMPLE, train_t);
@@ -190,5 +154,5 @@ int main() {
     g1 = ImageToFV(result);
     float response = svm->predict(g1);
     cout << "Response: " << response << endl;
-  }
+  }*/
 }
