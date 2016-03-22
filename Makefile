@@ -20,5 +20,8 @@ test: test.cc preprocess.o
 filesystem: filesystem.cc CKTrainData.cc
 	$(CC) filesystem.cc CKTrainData.cc -std=c++11 -o $@ $(BOOST_LIBS)
 
+jaffe: JaffeData.cc
+	$(CC) JaffeData.cc -std=c++11 -o $@ $(BOOST_LIBS)
+
 clean:
-	rm -rf *.o svm test
+	rm -rf *.o svm test jaffe
