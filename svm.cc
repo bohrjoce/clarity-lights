@@ -47,7 +47,7 @@ int main() {
       unsigned int end = ckdata.filenames[i][j].size();
       // test generalization to new subjects
       // first frame in sequence. label = neutral = 2. 2 was old contempt label
-      if (i % 25) {
+      if (i % 11) {
         train_x.push_back(gabor_features);
         train_t.push_back(Mat(1, 1, CV_32SC1, 2));
       } else {
@@ -63,7 +63,7 @@ int main() {
       }
       gabor_features = ImageToFV(m);
       // test generalization to new subjects
-      if (i % 25) {
+      if (i % 11) {
         train_x.push_back(gabor_features);
         train_t.push_back(Mat(1, 1, CV_32SC1, ckdata.labels[i][j]));
       } else {
@@ -99,8 +99,6 @@ int main() {
   svm->setType(SVM::C_SVC);
   svm->setKernel(SVM::LINEAR);
   svm->setGamma(3);
-
-
   //INIT VALUES:
   //i=174
   //correct = 141
@@ -176,4 +174,21 @@ int main() {
   imwrite("result.png", image);
   imshow("SVM simple example", image);
   waitKey(0);*/
+
+  // Train model on cohn-kanade and save xml
+  svm->train(train_x, ROW_SAMPLE, train_t);
+  svm->save("res/svm.xml");
+  // OR
+  // Load trained svm model
+  // svm = StatModel::load<SVM>("res/svm.xml");
+
+  cout << "finished training, model saved in svm.xml\n";
+
+
+  Mat result, g1;
+  if (preprocess("res/happy.jpg", result) == 0) {
+    g1 = ImageToFV(result);
+    float response = svm->predict(g1);
+    cout << "Response: " << response << endl;
+  }
 }

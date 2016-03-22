@@ -1,0 +1,7 @@
+create these empty directories in cohn-kanade/Emotion/
+
+084/004
+100/001
+126/001, 126/002
+128/001, 128/003, 128/005
+129/001, 129/003, 129/004, 129/005,
