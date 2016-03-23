@@ -48,9 +48,10 @@ int preprocess(string imagePath, Mat &output) {
         }
     }
 
-    // Crop, resize, and return face
+    // Crop, resize, normalize, and return face
     face = imageGray(faceBoundary);
     resize(face, face, finalSize);
+    normalize(face, face, 0, 255, NORM_MINMAX, CV_8U);
     output = face;
     return 0;
 }
