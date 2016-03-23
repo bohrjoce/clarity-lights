@@ -22,7 +22,10 @@ Mat ImageToFV(Mat inputImage, float stddev, int filtSize)
     Mat imOutput;
     Mat featureVector;
     Mat image;
+
     inputImage.convertTo(image,CV_32F, 1.0/255.0);
+    //imshow("image", image);
+    //waitKey(0);
     float wavelength = 2.0;
     //namedWindow( "Filter", WINDOW_AUTOSIZE ); // Create a window for display.
     // namedWindow( "Input", WINDOW_AUTOSIZE ); // Create a window for display.
@@ -38,8 +41,8 @@ Mat ImageToFV(Mat inputImage, float stddev, int filtSize)
                     pi*j/8.0, //theta value, orientation of gaussian
                     wavelength, //wavelength of sinusiod, determines freq center of guassian
                     1, //"spacial aspect" which is just scaling of y dimension of guassian
-                    0 //phase offset of sinusoids, who cares
-                    // ,CV_32F //filter type, either CV_32F or CV_64F
+                    0, //phase offset of sinusoids, who cares
+                    CV_32F //filter type, either CV_32F or CV_64F
                     );
             filter2D(
                     image, //input image
@@ -48,11 +51,21 @@ Mat ImageToFV(Mat inputImage, float stddev, int filtSize)
                     filter  //filter to be convolved with input
                     );
             //         cout << " wavelength is " << wavelength << "\nphase is " << pi*j/8.0 <<endl;
+            double min, max;
+            minMaxLoc(filterOutput, &min, &max);
+            //cout << " max pixel value is " << max << endl;
+          
+            filterOutput = filterOutput/max;
+            
+            
+            minMaxLoc(filterOutput, &min, &max);
+            //cout << "normalized max pixel value is " << max << endl;
             featureVector.push_back(filterOutput);
-            //filterOutput.convertTo(imOutput, CV_8U,1.0/255.0);
-            //imshow( "imOutput", imOutput);
+            
+            
+            //imshow( "imOutput",filterOutput);
             //imshow( "Filter", filter);
-            //     waitKey(0); // Wait for a keystroke
+            //waitKey(0); // Wait for a keystroke
 
         }
         //halfoctave increment

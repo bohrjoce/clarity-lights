@@ -5,7 +5,7 @@ using namespace cv;
 
 // Consts
 static const string face_cascade_name = "res/haarcascade_frontalface_alt.xml";
-static const Size finalSize(48, 48);
+static const Size finalSize(148, 148);
 
 int preprocess(string imagePath, Mat &output) {
     // Vars

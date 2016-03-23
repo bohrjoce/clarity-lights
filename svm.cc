@@ -1,7 +1,7 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <vector>
-
+#include "KDEFValidation.h"
 #include "CKTrainData.h"
 #include "preprocess.h"
 #include "gabor_filter.h"
@@ -11,7 +11,11 @@ using namespace ml;
 using namespace std;
 
 int main() {
+  KDEFValidation kd;
 
+  
+  // kd.print_samples();
+//  return 1;
   int height = 512, width = 512;
   Mat image = Mat::zeros(height, width, CV_8UC3);
 
@@ -30,6 +34,24 @@ int main() {
   vector<Mat>pLabels; 
   Mat curPersonFeatures(0,0,CV_32F);
   Mat curPersonLabels(0,0,CV_32SC1);
+  
+  Mat testKDF(0, 0, CV_32F);
+  Mat testKDL(0, 0, CV_32SC1); 
+  /*
+   for (unsigned int i = 0; i < kd.samples.size(); ++i){
+    if (kd.samples[i].emotion ==2) continue;
+      if (preprocess(kd.samples[i].filepath, m) != 0) {
+        cout << "preprocess failed: " << kd.samples[i].filepath << endl;
+        exit(1);
+      }
+      // cout << "iteration for j is value " << j << endl;
+      gabor_features = ImageToFV(m);
+      testKDF.push_back(gabor_features);
+      testKDL.push_back(Mat(1, 1, CV_32SC1, kd.samples[i].emotion));
+  }
+
+  cout << " testKDF size is " << testKDF.size() << endl; 
+  */
   for (unsigned int i = 0; i < ckdata.filenames.size(); ++i) {
     curPersonFeatures.release();
     curPersonLabels.release();
@@ -43,6 +65,7 @@ int main() {
       }
       // cout << "iteration for j is value " << j << endl;
       gabor_features = ImageToFV(m);
+      
       // cout << " size of gabor_features is " << gabor_features.size() << endl; 
       unsigned int end = ckdata.filenames[i][j].size();
       // test generalization to new subjects
@@ -62,6 +85,7 @@ int main() {
         exit(1);
       }
       gabor_features = ImageToFV(m);
+ 
       // test generalization to new subjects
       if (i % 11) {
         train_x.push_back(gabor_features);
@@ -137,44 +161,17 @@ int main() {
     cout << " on person: " << i << endl;
     cout << " total is " << total << endl;
   }
-
-  double accuracy = (double)correct/(double)total;
+  correct = 0;
+  for(int i = 0; i < testKDF.rows; ++i){
+    int response = svm->predict(testKDF.row(i));
+    cout << response << " vs " << (int)testKDL.at<int>(i) << endl;
+    if (response == (int)testKDL.at<int>(i)) ++correct;
+  
+  }
+  double accuracy = (double)correct/(double)testKDF.rows;
 
   cout << "accuracy : " << accuracy << endl;
-  /*
-  // show decision regions given by svm
-  for (int i = 0; i < image.rows; ++i) {
-  for (int j = 0; j < image.cols; ++j) {
-  float sample[2] = {(float)j, (float)i};
-  Mat sampleMat(1, 2, CV_32FC1, sample);
-  float response = svm->predict(sampleMat);
-
-  if ((int)response == 1) image.at<Vec3b>(i,j) = green;
-  else if ((int)response == -1) image.at<Vec3b>(i,j) = blue;
-  }
-  }
-  */
-  /*  // show training data
-      int thickness = -1;
-      int lineType = 8;
-      circle( image, Point(501,  10), 5, Scalar(  0,   0,   0), thickness, lineType );
-      circle( image, Point(255,  10), 5, Scalar(255, 255, 255), thickness, lineType );
-      circle( image, Point(501, 255), 5, Scalar(255, 255, 255), thickness, lineType );
-      circle( image, Point(10 , 501), 5, Scalar(255, 255, 255), thickness, lineType );
-
-  // show support vectors
-  thickness = 2;
-  lineType = 8;
-  Mat sv = svm->getSupportVectors();
-
-  for (int i = 0; i < sv.rows; ++i) {
-  const float* v = sv.ptr<float>(i);
-  circle( image, Point( (int) v[0], (int) v[1]), 6, Scalar(128, 128, 128), thickness, lineType );
-  }
-  imwrite("result.png", image);
-  imshow("SVM simple example", image);
-  waitKey(0);*/
-
+ 
   // Train model on cohn-kanade and save xml
   svm->train(train_x, ROW_SAMPLE, train_t);
   svm->save("res/svm.xml");
