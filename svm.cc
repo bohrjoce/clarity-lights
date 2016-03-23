@@ -77,7 +77,6 @@ int main() {
       gabor_features = ImageToFV(m);
       
       // cout << " size of gabor_features is " << gabor_features.size() << endl; 
-      unsigned int end = ckdata.filenames[i][j].size();
       // test generalization to new subjects
       /*  TEST: use raw greyscale instead of gabor
       gabor_features.release();
