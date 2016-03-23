@@ -21,17 +21,26 @@ int main() {
 
   CKTrainData ckdata;
   ckdata.init();
-  Mat train_x(0, 0, CV_32F);
-  Mat train_t(0, 0, CV_32SC1);
-  Mat test_x(0, 0, CV_32F);
-  Mat test_t(0, 0, CV_32SC1);
+  for (unsigned int i = 0; i < ckdata.filenames.size(); ++i) {
+    for (unsigned int j = 0; j < ckdata.filenames[i].size(); ++j) {
+      Mat m;
+      preprocess(ckdata.filenames[i][j][0], m);
+      namedWindow("Display window.", WINDOW_AUTOSIZE);
+      imshow("Display window.", m);
+      waitKey(0);
+      int end = ckdata.filenames[i][j].size();
+      preprocess(ckdata.filenames[i][j][end-1], m);
+      namedWindow("Display window.", WINDOW_AUTOSIZE);
+      imshow("Display window.", m);
+      waitKey(0);
+    }
+  }
   Mat allSamples(0, 0, CV_32F);
   Mat allLabels(0, 0, CV_32SC1);
 
-  Mat pFeatures;
   Mat m, gabor_features;
   vector<Mat>pFeats;
-  vector<Mat>pLabels; 
+  vector<Mat>pLabels;
   Mat curPersonFeatures(0,0,CV_32F);
   Mat curPersonLabels(0,0,CV_32SC1);
   
@@ -52,6 +61,7 @@ int main() {
 
   cout << " testKDF size is " << testKDF.size() << endl; 
   */
+
   for (unsigned int i = 0; i < ckdata.filenames.size(); ++i) {
     curPersonFeatures.release();
     curPersonLabels.release();
@@ -63,27 +73,27 @@ int main() {
         cout << "preprocess failed: " << ckdata.filenames[i][j][0] << endl;
         exit(1);
       }
-      // cout << "iteration for j is value " << j << endl;
+
       gabor_features = ImageToFV(m);
       
       // cout << " size of gabor_features is " << gabor_features.size() << endl; 
       unsigned int end = ckdata.filenames[i][j].size();
       // test generalization to new subjects
+      /*  TEST: use raw greyscale instead of gabor
+      gabor_features.release();
+      m.convertTo(gabor_features, CV_32F, 1.0/255.0);
+      gabor_features = gabor_features.reshape(1,1);*/
+
       // first frame in sequence. label = neutral = 2. 2 was old contempt label
-      if (i % 11) {
-        train_x.push_back(gabor_features);
-        train_t.push_back(Mat(1, 1, CV_32SC1, 2));
-      } else {
-        test_x.push_back(gabor_features);
-        test_t.push_back(Mat(1, 1, CV_32SC1, 2));
-      }
       curPersonFeatures.push_back(gabor_features);
       curPersonLabels.push_back(Mat(1, 1, CV_32SC1, 2));
 
+      unsigned int end = ckdata.filenames[i][j].size();
       if (preprocess(ckdata.filenames[i][j][end-1], m) != 0) {
         cout << "preprocess failed: " << ckdata.filenames[i][j][end-1] << endl;
         exit(1);
       }
+
       gabor_features = ImageToFV(m);
  
       // test generalization to new subjects
@@ -94,35 +104,29 @@ int main() {
         test_x.push_back(gabor_features);
         test_t.push_back(Mat(1, 1, CV_32SC1, ckdata.labels[i][j]));
       }
+      /*  TEST: use raw greyscale instead of gabor
+      gabor_features.release();
+      m.convertTo(gabor_features,CV_32F, 1.0/255.0);
+      gabor_features = gabor_features.reshape(1,1);*/
+
+      // last frame in sequence. label = ckdata.labels[i][j]
       curPersonFeatures.push_back(gabor_features);
       curPersonLabels.push_back(Mat(1, 1, CV_32SC1, ckdata.labels[i][j]));
     }
     // cout << " persons features size is " << curPersonFeatures.size() << endl;
-    pFeats.push_back(curPersonFeatures); 
+    pFeats.push_back(curPersonFeatures);
     pLabels.push_back(curPersonLabels);
   }
 
-  cout << "pFeats is " << pFeats.size() << endl; 
+  cout << "pFeats is " << pFeats.size() << endl;
   cout << "pLabels is " << pLabels.size() << endl;
-  //for(unsigned int i = 0; i < pFeats.size(); ++i){
-  //  cout << "features size for each person: " << pFeats[0].size() << endl;
-  //}
-  //ckdata.print_labels();
-  /*  // set up training data
-  // TODO: replace dummy data with cohn-kanade data. get filenames, preprocess,
-  // extract gabor features
-  int labels[4] = {1, -1, -1, -1};
-  Mat labelsMat(4, 1, CV_32S, labels);
-  float trainingData[4][2] = { {501, 10}, {255, 10}, {501, 255}, {10, 501} };
-  Mat trainingDataMat(4, 2, CV_32FC1, trainingData);*/
-
 
   // train svm
   Ptr<SVM> svm = SVM::create();
-  //  svm->trainAuto(TrainData::create(train_x, ROW_SAMPLE, train_t));
   svm->setType(SVM::C_SVC);
   svm->setKernel(SVM::LINEAR);
-  svm->setGamma(3);
+  // TODO: get this to work
+  //  svm->trainAuto(TrainData::create(train_x, ROW_SAMPLE, train_t));
   //INIT VALUES:
   //i=174
   //correct = 141
@@ -131,15 +135,19 @@ int main() {
   cout << "started training\n";
 
   int numPeople = pFeats.size();
-  int total = 0;   
+  int total = 0;
+  Mat train_x(0, 0, CV_32F);
+  Mat train_t(0, 0, CV_32SC1);
+  Mat test_x(0, 0, CV_32F);
+  Mat test_t(0, 0, CV_32SC1);
   for(int i = 0; i < numPeople; ++i) {
-    cout << "\n\n leave one out: " << i << endl; 
+    cout << "\n\n leave one out: " << i << endl;
     train_x.release();
     train_t.release();
     test_x.release();
     test_t.release();
     for (int j = 0; j <numPeople; ++j){
-      if(j==i){ 
+      if(j==i){
         test_x.push_back(pFeats[j]);
         test_t.push_back(pLabels[j]);
       }
@@ -161,6 +169,7 @@ int main() {
     cout << " on person: " << i << endl;
     cout << " total is " << total << endl;
   }
+ /* 
   correct = 0;
   for(int i = 0; i < testKDF.rows; ++i){
     int response = svm->predict(testKDF.row(i));
@@ -169,6 +178,14 @@ int main() {
   
   }
   double accuracy = (double)correct/(double)testKDF.rows;
+*/
+
+  double accuracy = (double)correct/(double)total;
+
+  cout << "accuracy : " << accuracy << endl;
+
+/*
+  Testing on an external image
 
   cout << "accuracy : " << accuracy << endl;
  
@@ -187,5 +204,5 @@ int main() {
     g1 = ImageToFV(result);
     float response = svm->predict(g1);
     cout << "Response: " << response << endl;
-  }
+  }*/
 }
