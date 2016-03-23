@@ -96,14 +96,6 @@ int main() {
 
       gabor_features = ImageToFV(m);
  
-      // test generalization to new subjects
-      if (i % 11) {
-        train_x.push_back(gabor_features);
-        train_t.push_back(Mat(1, 1, CV_32SC1, ckdata.labels[i][j]));
-      } else {
-        test_x.push_back(gabor_features);
-        test_t.push_back(Mat(1, 1, CV_32SC1, ckdata.labels[i][j]));
-      }
       /*  TEST: use raw greyscale instead of gabor
       gabor_features.release();
       m.convertTo(gabor_features,CV_32F, 1.0/255.0);
@@ -183,6 +175,7 @@ int main() {
   double accuracy = (double)correct/(double)total;
 
   cout << "accuracy : " << accuracy << endl;
+
 
 /*
   Testing on an external image
