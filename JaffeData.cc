@@ -60,8 +60,8 @@ int main() {
         image.release();
         gabor.release();
         if (preprocess(jaffeDir + jaffeImages.filenames[i], image) == 0) {
-            imshow("Face", image);
-            waitKey(0);
+            // imshow("Face", image);
+            // waitKey(0);
             gabor = ImageToFV(image);
             int pred = svm->predict(gabor);
             cout << "Predicted: " << pred << endl;
