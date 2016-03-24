@@ -139,6 +139,14 @@ int main() {
   Mat test_x(0, 0, CV_32F);
   Mat test_t(0, 0, CV_32SC1);
 
+  // Adaboost
+  for(int i = 0; i < numPeople; ++i) {
+    train_x.push_back(pFeats[i]);
+    train_t.push_back(pLabels[i]);
+  }
+  Adaboost adaboost = Adaboost(train_x, train_t);
+  set<int> indices = adaboost.feature_selection(10);
+
   for(int i = 0; i < numPeople; ++i) {
     cout << "\n\n leave one out: " << i << endl;
     train_x.release();
@@ -159,8 +167,6 @@ int main() {
     // Adaboost
     Mat new_train_x(train_x.rows, 0, CV_32F);
     Mat new_test_x(test_x.rows, 0, CV_32F);
-    Adaboost adaboost = Adaboost(train_x, train_t);
-    set<int> indices = adaboost.feature_selection(10);
     // Use data with only selected features
     for (set<int>::iterator it = indices.begin(); it != indices.end(); it++) {
       hconcat(new_train_x, train_x.col(*it), new_train_x);
