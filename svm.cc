@@ -2,6 +2,8 @@
 #include <iostream>
 #include <vector>
 #include "KDEFValidation.h"
+#include <set>
+
 #include "CKTrainData.h"
 #include "preprocess.h"
 #include "gabor_filter.h"
@@ -133,23 +135,6 @@ int main() {
   Mat test_x(0, 0, CV_32F);
   Mat test_t(0, 0, CV_32SC1);
 
-
-  // Adaboost stuff start //////////////////////
-
-  // cout << "\nADABOOSTING:\n" << endl;
-  // for(int i = 0; i < numPeople; ++i) {
-  //   train_x.push_back(pFeats[i]);
-  //   train_t.push_back(pLabels[i]);
-  // }
-  // cout << "Mats constructed: " << train_x.rows << "x" << train_x.cols
-  //   << " and " << train_t.rows << "x" << train_t.cols << endl;
-  // Adaboost adaboost = Adaboost(train_x, train_t);
-  // Mat testing = adaboost.feature_selection(10);
-  // exit(1);
-
-  // Adaboost stuff end ////////////////////////
-
-
   for(int i = 0; i < numPeople; ++i) {
     cout << "\n\n leave one out: " << i << endl;
     train_x.release();
@@ -166,15 +151,29 @@ int main() {
         train_t.push_back(pLabels[j]);
       }
     }
+
+    // Adaboost
+    Mat new_train_x(train_x.rows, 0, CV_32F);
+    Mat new_test_x(test_x.rows, 0, CV_32F);
+    Adaboost adaboost = Adaboost(train_x, train_t);
+    set<int> indices = adaboost.feature_selection(10);
+    // Use data with only selected features
+    for (set<int>::iterator it = indices.begin(); it != indices.end(); it++) {
+      hconcat(new_train_x, train_x.col(*it), new_train_x);
+      hconcat(new_test_x, test_x.col(*it), new_test_x);
+    }
+    cout << "Training on: " << new_train_x.rows << "x" << new_train_x.cols << endl;
+    cout << "Testing on: " << new_test_x.rows << "x" << new_test_x.cols << endl;;
+
     //cout << " training size is " << train_x.size() << endl;
     //cout << " test size is " << test_x.size() << endl;
-    svm->train(train_x, ROW_SAMPLE, train_t);
-    for (int i = 0; i < test_x.rows; ++i) {
-      int response = svm->predict(test_x.row(i));
+    svm->train(new_train_x, ROW_SAMPLE, train_t);
+    for (int i = 0; i < new_test_x.rows; ++i) {
+      int response = svm->predict(new_test_x.row(i));
       cout << response << " vs " << (int)test_t.at<int>(i) << endl;
       if (response == (int)test_t.at<int>(i)) ++correct;
     }
-    total+=test_x.rows;
+    total+=new_test_x.rows;
     cout << " current correct " << correct << endl;
     cout << " on person: " << i << endl;
     cout << " total is " << total << endl;

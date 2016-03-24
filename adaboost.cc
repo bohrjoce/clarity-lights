@@ -9,31 +9,27 @@ using namespace ml;
 Adaboost::Adaboost(Mat data_, Mat labels_) {
 
   // Error checking
-  cout << "checking" << endl;
   if (data_.rows != labels_.rows || labels_.cols != 1) {
     cout << "Mats are formatted incorectly." << endl;
     exit(1);
   }
 
   // Copy data (shallow copy)
-  cout << "copying" << endl;
   data = data_.clone();
   unsigned int num_samples = data.rows;
 
   // Push back a Mat to hold binary labels for each emotion, init to 0s
-  cout << "pushing" << endl;
   for (unsigned int i = 0; i < NUM_EMOTIONS; i++) {
     labels.push_back(Mat::zeros(num_samples, 1, CV_32SC1));
   }
 
   // Construct binary labels
-  cout << "constructing" << endl;
   for (unsigned int i = 0; i < num_samples; i++) {
     labels[labels_.at<int>(i) - 1].at<int>(i) = 1;
   }
 
   // // Print labels
-  // cout << "printing" << endl;
+  // cout << "Binary labels:" << endl;
   // cout << "1\t" << "2\t" << "3\t" << "4\t" << "5\t" << "6\t" << "7\t" << endl;
   // for (unsigned int i = 0; i < num_samples; i++) {
   //   for (unsigned int j = 0; j < NUM_EMOTIONS; j++) {
@@ -55,9 +51,8 @@ Adaboost::Adaboost(Mat data_, Mat labels_) {
   // }
 }
 
-Mat Adaboost::feature_selection(unsigned int weak_learners) {
+set<int> Adaboost::feature_selection(unsigned int weak_learners) {
 
-  Mat output = Mat(data.rows, 0, CV_32F);
   set<int> indices;
   
   for (unsigned int i = 0; i < NUM_EMOTIONS; i++) {
@@ -80,12 +75,8 @@ Mat Adaboost::feature_selection(unsigned int weak_learners) {
     }
   }
 
-  // Return data with only selected features
-  for (set<int>::iterator it = indices.begin(); it != indices.end(); it++) {
-    hconcat(output, data.col(*it), output);
-  }
-  cout << "Samples = " << output.rows << ", # features = " << output.cols << endl;
-  return output;
+  cout << "Total # features = " << indices.size() << endl;
+  return indices;
 }
 
 // int main() {
