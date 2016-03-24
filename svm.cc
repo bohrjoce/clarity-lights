@@ -14,7 +14,7 @@ using namespace ml;
 using namespace std;
 
 int main() {
-  KDEFValidation kd;
+//  KDEFValidation kd;
 
   
   // kd.print_samples();
@@ -48,7 +48,7 @@ int main() {
   vector<Mat>pLabels;
   Mat curPersonFeatures(0,0,CV_32F);
   Mat curPersonLabels(0,0,CV_32SC1);
-  
+ /* 
   Mat testKDF(0, 0, CV_32F);
   Mat testKDL(0, 0, CV_32SC1); 
   
@@ -65,7 +65,7 @@ int main() {
   }
 
   cout << " testKDF size is " << testKDF.size() << endl; 
-  
+ */ 
 
   for (unsigned int i = 0; i < ckdata.filenames.size() ; ++i) {
     curPersonFeatures.release();
@@ -182,22 +182,23 @@ int main() {
     cout << " on person: " << i << endl;
     cout << " total is " << total << endl;
   }
-  
-  correct = 0;
-  for(int i = 0; i < testKDF.rows; ++i){
-    int response = svm->predict(testKDF.row(i));
-    cout << response << " vs " << (int)testKDL.at<int>(i) << endl;
-    if (response == (int)testKDL.at<int>(i)) ++correct;
-  
-  }
-  double accuracy = (double)correct/(double)testKDF.rows;
-
-
-//  double accuracy = (double)correct/(double)total;
+  double accuracy = (double)correct/(double)total;
 
   cout << "accuracy : " << accuracy << endl;
 
+  /*
+     correct = 0;
 
+     for(int i = 0; i < testKDF.rows; ++i){
+     int response = svm->predict(testKDF.row(i));
+     cout << response << " vs " << (int)testKDL.at<int>(i) << endl;
+     if (response == (int)testKDL.at<int>(i)) ++correct;
+
+     }
+     double accuracy = (double)correct/(double)testKDF.rows;
+     */
+
+  
 /*
   Testing on an external image
 
