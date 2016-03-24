@@ -3,20 +3,14 @@
 
 #include <string>
 #include <vector>
-#include <iostream>
-#include <boost/filesystem.hpp>
-#include <boost/foreach.hpp>
-#include <opencv2/opencv.hpp>
 
-using namespace std;
-
-const string jaffeDir = "jaffeimages/jaffe/";
+const std::string jaffeDir = "jaffeimages/jaffe/";
 
 class JaffeImages {
 public:
     JaffeImages();
-    vector<string> filenames;
-    vector<int> labels;
+    std::vector<std::string> filenames;
+    std::vector<int> labels;
 };
 
 #endif

@@ -5,6 +5,7 @@
 #include "CKTrainData.h"
 #include "preprocess.h"
 #include "gabor_filter.h"
+#include "adaboost.h"
 
 using namespace cv;
 using namespace ml;
@@ -21,20 +22,20 @@ int main() {
 
   CKTrainData ckdata;
   ckdata.init();
-  for (unsigned int i = 0; i < ckdata.filenames.size(); ++i) {
-    for (unsigned int j = 0; j < ckdata.filenames[i].size(); ++j) {
-      Mat m;
-      preprocess(ckdata.filenames[i][j][0], m);
-      namedWindow("Display window.", WINDOW_AUTOSIZE);
-      imshow("Display window.", m);
-      waitKey(0);
-      int end = ckdata.filenames[i][j].size();
-      preprocess(ckdata.filenames[i][j][end-1], m);
-      namedWindow("Display window.", WINDOW_AUTOSIZE);
-      imshow("Display window.", m);
-      waitKey(0);
-    }
-  }
+  // for (unsigned int i = 0; i < ckdata.filenames.size(); ++i) {
+  //   for (unsigned int j = 0; j < ckdata.filenames[i].size(); ++j) {
+  //     Mat m;
+  //     preprocess(ckdata.filenames[i][j][0], m);
+  //     namedWindow("Display window.", WINDOW_AUTOSIZE);
+  //     imshow("Display window.", m);
+  //     waitKey(0);
+  //     int end = ckdata.filenames[i][j].size();
+  //     preprocess(ckdata.filenames[i][j][end-1], m);
+  //     namedWindow("Display window.", WINDOW_AUTOSIZE);
+  //     imshow("Display window.", m);
+  //     waitKey(0);
+  //   }
+  // }
   Mat allSamples(0, 0, CV_32F);
   Mat allLabels(0, 0, CV_32SC1);
 
@@ -131,6 +132,24 @@ int main() {
   Mat train_t(0, 0, CV_32SC1);
   Mat test_x(0, 0, CV_32F);
   Mat test_t(0, 0, CV_32SC1);
+
+
+  // Adaboost stuff start //////////////////////
+
+  // cout << "\nADABOOSTING:\n" << endl;
+  // for(int i = 0; i < numPeople; ++i) {
+  //   train_x.push_back(pFeats[i]);
+  //   train_t.push_back(pLabels[i]);
+  // }
+  // cout << "Mats constructed: " << train_x.rows << "x" << train_x.cols
+  //   << " and " << train_t.rows << "x" << train_t.cols << endl;
+  // Adaboost adaboost = Adaboost(train_x, train_t);
+  // Mat testing = adaboost.feature_selection(10);
+  // exit(1);
+
+  // Adaboost stuff end ////////////////////////
+
+
   for(int i = 0; i < numPeople; ++i) {
     cout << "\n\n leave one out: " << i << endl;
     train_x.release();
