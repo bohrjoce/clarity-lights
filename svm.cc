@@ -21,6 +21,7 @@ int main() {
 
   CKTrainData ckdata;
   ckdata.init();
+ /* 
   for (unsigned int i = 0; i < ckdata.filenames.size(); ++i) {
     for (unsigned int j = 0; j < ckdata.filenames[i].size(); ++j) {
       Mat m;
@@ -35,6 +36,7 @@ int main() {
       waitKey(0);
     }
   }
+ */ 
   Mat allSamples(0, 0, CV_32F);
   Mat allLabels(0, 0, CV_32SC1);
 
@@ -46,7 +48,7 @@ int main() {
   
   Mat testKDF(0, 0, CV_32F);
   Mat testKDL(0, 0, CV_32SC1); 
-  /*
+  
    for (unsigned int i = 0; i < kd.samples.size(); ++i){
     if (kd.samples[i].emotion ==2) continue;
       if (preprocess(kd.samples[i].filepath, m) != 0) {
@@ -54,17 +56,19 @@ int main() {
         exit(1);
       }
       // cout << "iteration for j is value " << j << endl;
-      gabor_features = ImageToFV(m);
+      gabor_features = ImageToFV(m,4);
       testKDF.push_back(gabor_features);
       testKDL.push_back(Mat(1, 1, CV_32SC1, kd.samples[i].emotion));
   }
 
   cout << " testKDF size is " << testKDF.size() << endl; 
-  */
+  
 
-  for (unsigned int i = 0; i < ckdata.filenames.size(); ++i) {
+  for (unsigned int i = 0; i < ckdata.filenames.size() ; ++i) {
     curPersonFeatures.release();
     curPersonLabels.release();
+
+//    cout << i << endl;
     for (unsigned int j = 0; j < ckdata.filenames[i].size(); ++j) {
 
       // ignore unlabeled examples and examples labeled contempt
@@ -74,7 +78,7 @@ int main() {
         exit(1);
       }
 
-      gabor_features = ImageToFV(m);
+      gabor_features = ImageToFV(m,4);
       
       // cout << " size of gabor_features is " << gabor_features.size() << endl; 
       // test generalization to new subjects
@@ -93,7 +97,7 @@ int main() {
         exit(1);
       }
 
-      gabor_features = ImageToFV(m);
+      gabor_features = ImageToFV(m,4);
  
       /*  TEST: use raw greyscale instead of gabor
       gabor_features.release();
@@ -131,7 +135,7 @@ int main() {
   Mat train_t(0, 0, CV_32SC1);
   Mat test_x(0, 0, CV_32F);
   Mat test_t(0, 0, CV_32SC1);
-  for(int i = 0; i < numPeople; ++i) {
+  for(int i = 0; i < numPeople-numPeople + 1; ++i) {
     cout << "\n\n leave one out: " << i << endl;
     train_x.release();
     train_t.release();
@@ -160,7 +164,7 @@ int main() {
     cout << " on person: " << i << endl;
     cout << " total is " << total << endl;
   }
- /* 
+  
   correct = 0;
   for(int i = 0; i < testKDF.rows; ++i){
     int response = svm->predict(testKDF.row(i));
@@ -169,9 +173,9 @@ int main() {
   
   }
   double accuracy = (double)correct/(double)testKDF.rows;
-*/
 
-  double accuracy = (double)correct/(double)total;
+
+//  double accuracy = (double)correct/(double)total;
 
   cout << "accuracy : " << accuracy << endl;
 
