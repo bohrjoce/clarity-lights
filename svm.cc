@@ -163,6 +163,10 @@ int main() {
         train_t.push_back(pLabels[j]);
       }
     }
+    if (train_x.rows <= 0 || test_x.rows <= 0) {
+      cout << "Empty train or test set." << endl;
+      continue;
+    }
 
     // Adaboost
     Mat new_train_x(train_x.rows, 0, CV_32F);
