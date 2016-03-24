@@ -8,8 +8,8 @@ CFLAGS = -g -Wall -Werror -std=c++11 $(OPENCV_FLAGS)
 
 default: svm
 
-svm: svm.cc preprocess.cc CKTrainData.cc KDEFValidation.cc
-	$(CC) $(CFLAGS) svm.cc preprocess.cc CKTrainData.cc gabor_filter.cc  KDEFValidation.cc -std=c++11 -o $@ $(LIBS)
+svm: svm.cc preprocess.cc CKTrainData.cc KDEFValidation.cc adaboost.cc
+	$(CC) $(CFLAGS) svm.cc preprocess.cc CKTrainData.cc gabor_filter.cc  KDEFValidation.cc adaboost.cc -std=c++11 -o $@ $(LIBS)
 
 preprocess.o: preprocess.cc preprocess.h
 	$(CC) $(CFLAGS) preprocess.cc -c $(LIBS)
@@ -23,5 +23,8 @@ filesystem: filesystem.cc CKTrainData.cc
 jaffe: JaffeData.cc preprocess.cc gabor_filter.cc
 	$(CC) JaffeData.cc preprocess.cc gabor_filter.cc -std=c++11 -o $@ $(LIBS)
 
+boost: adaboost.cc NuggetBoost.cc
+	$(CC) adaboost.cc NuggetBoost.cc -std=c++11 -o $@ $(LIBS)
+
 clean:
-	rm -rf *.o svm test jaffe
+	rm -rf *.o svm test jaffe boost

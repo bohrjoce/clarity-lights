@@ -1,6 +1,10 @@
 #include "JaffeData.h"
 #include "preprocess.h"
 #include "gabor_filter.h"
+#include <iostream>
+#include <boost/filesystem.hpp>
+#include <boost/foreach.hpp>
+#include <opencv2/opencv.hpp>
 
 using namespace std;
 using namespace cv;
