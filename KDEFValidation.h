@@ -1,18 +1,18 @@
+#ifndef KDEFVALIDATION_H
+#define KDEFVALIDATION_H
+
 #include <string>
 #include <iostream>
 #include <vector>
 #include <boost/filesystem.hpp>
-#include <boost/foreach.hpp>
-
-
-
-using namespace std;
-
-namespace fs = boost::filesystem;
-
+#include <opencv2/opencv.hpp>
+#include "preprocess.h"
+#include "gabor_filter.h"
+#include "CKTrainData.h"
+#include "adaboost.h"
 
 //emotion mapping:
-//  0-7 (i.e. 
+//  0-7 (i.e.
 //  0=neutral,
 //  1=anger,
 //  2=contempt,
@@ -22,23 +22,19 @@ namespace fs = boost::filesystem;
 //  6=sadness,
 //  7=surprise).
 
-const string kdef_dir = "KDEF/";
+const std::string kdef_dir = "KDEF/";
 
 
-struct sample{
-  string filepath;
+struct Sample{
+  std::string filepath;
   int emotion;
 };
 
 
-struct KDEFValidation{
+struct KDEFValidation {
+  std::vector<Sample> samples;
   KDEFValidation();
-  void init();
   void print_samples();
-  vector <sample> samples; 
-
 };
 
-
-
-
+#endif

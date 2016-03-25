@@ -6,14 +6,15 @@ using namespace std;
 using namespace cv;
 using namespace ml;
 
-Adaboost::Adaboost(Mat data_, Mat labels_) {
+Adaboost::Adaboost(Mat data_, Mat labels_, unsigned int weak_learners,
+    bool retrain) {
 
+  cout << "Adaboost feature selection\n";
   // Error checking
   if (data_.rows != labels_.rows || labels_.cols != 1) {
     cout << "Mats are formatted incorectly." << endl;
     exit(1);
   }
-
   // Copy data (shallow copy)
   data = data_.clone();
   unsigned int num_samples = data.rows;
@@ -27,6 +28,41 @@ Adaboost::Adaboost(Mat data_, Mat labels_) {
   for (unsigned int i = 0; i < num_samples; i++) {
     labels[labels_.at<int>(i) - 1].at<int>(i) = 1;
   }
+
+  for (unsigned int i = 0; i < NUM_EMOTIONS; i++) {
+    // Create new boost model
+    string savedir = ("res/boost" + to_string(weak_learners) + "-" +
+          to_string(i) + ".xml");
+    Ptr<Boost> boost = Boost::create();
+    boost->setBoostType(Boost::REAL);
+    boost->setWeakCount(weak_learners);
+    boost->setMaxDepth(1);
+    if (retrain) {
+      // Train model
+      cout << "Emotion: " << i << endl;
+      boost->train(data, ROW_SAMPLE, labels[i]);
+      boost->save(savedir);
+    } else {
+      boost = StatModel::load<Boost>(savedir);
+      if (boost == nullptr) {
+        cout << savedir << " doesn't exist" << endl;
+        exit(1);
+      }
+    }
+
+    vector<DTrees::Split> splits = boost->getSplits();
+    /*// Print features selected
+    for (unsigned int i = 0; i < splits.size(); i++) {
+      cout << "Split " << i << ", varIdx = " << splits[i].varIdx <<
+          ", quality = " << splits[i].quality << endl;
+    }*/
+    // Combine indices
+    for (unsigned int i = 0; i < splits.size(); i++) {
+      weak_learners_indices.insert(splits[i].varIdx);
+    }
+  }
+
+  cout << "Total # features = " << weak_learners_indices.size() << endl;
 
   // // Print labels
   // cout << "Binary labels:" << endl;
@@ -51,34 +87,13 @@ Adaboost::Adaboost(Mat data_, Mat labels_) {
   // }
 }
 
-set<int> Adaboost::feature_selection(unsigned int weak_learners) {
+Mat Adaboost::reduce_features(const Mat &original_mat) {
 
-  set<int> indices;
-  
-  for (unsigned int i = 0; i < NUM_EMOTIONS; i++) {
-    cout << "Emotion: " << i << endl;
-    // Create new boost model
-    Ptr<Boost> boost = Boost::create();
-    boost->setBoostType(Boost::REAL);
-    boost->setWeakCount(weak_learners);
-    boost->setMaxDepth(1);
-    // Train model
-    boost->train(data, ROW_SAMPLE, labels[i]);
-    vector<DTrees::Split> splits = boost->getSplits();
-    // Print features selected
-    for (unsigned int i = 0; i < splits.size(); i++) {
-      cout << "Split " << i << ", varIdx = " << splits[i].varIdx << ", quality = " << splits[i].quality << endl;
+    Mat reduced_mat(original_mat.rows, 0, CV_32F);
+    // Use data with only selected features
+    for (set<int>::iterator it = weak_learners_indices.begin();
+            it != weak_learners_indices.end(); it++) {
+      hconcat(reduced_mat, original_mat.col(*it), reduced_mat);
     }
-    // Combine indices
-    for (unsigned int i = 0; i < splits.size(); i++) {
-      indices.insert(splits[i].varIdx);
-    }
-  }
-
-  cout << "Total # features = " << indices.size() << endl;
-  return indices;
+    return reduced_mat;
 }
-
-// int main() {
-//   return 0;
-// }

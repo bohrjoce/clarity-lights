@@ -71,19 +71,18 @@ Mat ImageToFV(Mat inputImage, float stddev, int filtSize)
           CV_32F, //desired depth of output
           iFilter  //filter to be convolved with input
           );
-      
+
       cv::pow(realRes,2.0, realRes);
       cv::pow(imaginaryRes,2.0, imaginaryRes);
       cv::add(realRes, imaginaryRes, filterOutput); 
       cv::sqrt(filterOutput,filterOutput); 
-     
+
       //         cout << " wavelength is " << wavelength << "\nphase is " << pi*j/8.0 <<endl;
       //cout << " max pixel value is " << max << endl;
 
 
       //cout << "normalized max pixel value is " << max << endl;
       featureVector.push_back(filterOutput);
-
 
       //filterOutput = filterOutput/max; 
       //imageOutput = filterOutput.clone()/max;
@@ -92,15 +91,13 @@ Mat ImageToFV(Mat inputImage, float stddev, int filtSize)
       //imshow( "Filter", filter);
       //waitKey(0); // Wait for a keystroke
 
+
+      //imshow( "imOutput",filterOutput);
+      //imshow( "Filter", filter);
+      //waitKey(0); // Wait for a keystroke
+
     }
   }
-  /* double min, max;
-     minMaxLoc(filterOutput, &min, &max);
-     cout << "max is " << max << endl;
-     cout << "min is " << min << endl;
-
-     featureVector = featureVector/max;
-     */
   featureVector = featureVector.reshape(1,1);
   normalize(featureVector, featureVector, 0.0,1.0,  NORM_MINMAX, CV_32F);
 
