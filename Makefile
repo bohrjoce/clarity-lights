@@ -26,5 +26,8 @@ test: test.cc preprocess.o
 filesystem: filesystem.cc CKTrainData.cc
 	$(CC) filesystem.cc CKTrainData.cc -std=c++11 -o $@ $(BOOST_LIBS)
 
+arduino: arduino.cc
+	$(CC) arduino.cc -std=c++11 -o $@ $(CFLAGS)
+
 clean:
-	rm -rf *.o LOOCValidation KDEFValidation JAFFEValidation
+	rm -rf *.o svm test arduino LOOCValidation KDEFValidation JAFFEValidation
