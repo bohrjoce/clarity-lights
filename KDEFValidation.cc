@@ -1,4 +1,9 @@
 #include "KDEFValidation.h"
+
+using namespace std;
+using namespace cv;
+using namespace ml;
+
 const string afraid = "AF";
 const string angry = "AN";
 const string disgusted = "DI";
@@ -7,7 +12,7 @@ const string neutral = "NE";
 const string sad = "SA";
 const string surprised = "SU";
 
-KDEFValidation::KDEFValidation(){
+KDEFValidation::KDEFValidation() {
   fs::path target_dir(kdef_dir);
   fs::directory_iterator it0(target_dir), eod0;
   vector<fs::path> v0;
@@ -33,13 +38,13 @@ KDEFValidation::KDEFValidation(){
       //check to see if we are a straight image
       char angle = fileName[6];
       if(angle != 'S') continue;
-      sample newSample;
+      Sample newSample;
       newSample.filepath = imagePath;
       string emotion = fileName.substr(4,2);
       if(emotion==afraid)
-        newSample.emotion = 4; 
+        newSample.emotion = 4;
       else if(emotion==angry)
-        newSample.emotion = 1; 
+        newSample.emotion = 1;
       else if(emotion==happy)
         newSample.emotion = 5;
       else if(emotion==disgusted)
@@ -59,11 +64,57 @@ KDEFValidation::KDEFValidation(){
   }
 }
 
-  void KDEFValidation::print_samples(){
-    for(unsigned int i = 0; i < samples.size(); ++i){
-      cout << "\n~~~~~sample: " << i << "~~~~~\n";
-      cout << "path: " << samples[i].filepath << "\n";
-      cout << "emotion: " << samples[i].emotion << "\n";
-    }
-    cout << endl;
+void KDEFValidation::print_samples(){
+  for(unsigned int i = 0; i < samples.size(); ++i){
+    cout << "\n~~~~~sample: " << i << "~~~~~\n";
+    cout << "path: " << samples[i].filepath << "\n";
+    cout << "emotion: " << samples[i].emotion << "\n";
   }
+  cout << endl;
+}
+
+int main(int argc, char *argv[]) {
+  KDEFValidation kd;
+  float stddev = atof(argv[1]);
+  // kd.print_samples();
+
+  CKTrainData ckdata(true, stddev);
+  Data train = ckdata.get_flat_data();
+
+  Data adaboost_data = ckdata.get_flat_data();
+  Adaboost adaboost = Adaboost(adaboost_data.x, adaboost_data.t, 82, false);
+
+  Mat reduced_train_x = adaboost.reduce_features(train.x);
+
+  Ptr<SVM> svm = SVM::create();
+  svm->setType(SVM::C_SVC);
+  svm->setKernel(SVM::LINEAR);
+  svm->train(reduced_train_x, ROW_SAMPLE, train.t);
+
+  Mat image, test_x, reduced_test_x;
+  Mat testKDF(0, 0, CV_32F);
+  Mat testKDL(0, 0, CV_32SC1);
+  int correct = 0, total = 0;
+
+  for (unsigned int i = 0; i < kd.samples.size(); ++i){
+    test_x.release();
+    reduced_test_x.release();
+    if (kd.samples[i].emotion == 2) continue;
+    if (preprocess(kd.samples[i].filepath, image) != 0) {
+      cout << "preprocess failed: " << kd.samples[i].filepath << endl;
+      exit(1);
+    }
+    test_x = ImageToFV(image, stddev);
+    reduced_test_x = adaboost.reduce_features(test_x);
+    int response = svm->predict(reduced_test_x);
+    cout << response << " vs " << kd.samples[i].emotion << endl;
+    if (response == kd.samples[i].emotion) {
+      ++correct;
+    }
+    ++total;
+  }
+
+  cout << "Overall Accuracy: " << (double)correct/(double)total << endl;
+
+  return 0;
+}

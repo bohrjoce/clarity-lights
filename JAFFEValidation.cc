@@ -1,7 +1,11 @@
-#include "JaffeData.h"
+#include "JAFFEValidation.h"
 #include "preprocess.h"
 #include "gabor_filter.h"
+#include "CKTrainData.h"
+#include "data.h"
+#include "adaboost.h"
 #include <iostream>
+#include <cstdlib>
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
 #include <opencv2/opencv.hpp>
@@ -42,7 +46,7 @@ JaffeImages::JaffeImages() {
                     exit(1);
                 }
                 labels.push_back(e);
-            } 
+            }
         }
     } else {
         cerr << "JAFFE directory missing." << endl;
@@ -50,34 +54,44 @@ JaffeImages::JaffeImages() {
     }
 }
 
-
-int main() {
+int main(int argc, char *argv[]) {
     JaffeImages jaffeImages;
-    cout << jaffeImages.filenames.size() << endl;
-    cout << jaffeImages.labels.size() << endl;
 
-    Ptr<SVM> svm = StatModel::load<SVM>("res/svm.xml");
-    double correct = 0, total = 0;
-    Mat image, gabor;
+    float stddev = atof(argv[1]);
+    CKTrainData ckdata(true, stddev);
+    Data train = ckdata.get_flat_data();
 
-    for (int i = 0; i < jaffeImages.filenames.size(); i++) {
-        image.release();
-        gabor.release();
+    Data adaboost_data = ckdata.get_flat_data();
+    Adaboost adaboost = Adaboost(adaboost_data.x, adaboost_data.t, 82, false);
+
+    Mat reduced_train_x = adaboost.reduce_features(train.x);
+
+    Ptr<SVM> svm = SVM::create();
+    svm->setType(SVM::C_SVC);
+    svm->setKernel(SVM::LINEAR);
+    svm->train(reduced_train_x, ROW_SAMPLE, train.t);
+
+    int correct = 0, total = 0;
+    Mat image, test_x, reduced_test_x;
+
+    for (unsigned int i = 0; i < jaffeImages.filenames.size(); i++) {
+        test_x.release();
+        reduced_test_x.release();
         if (preprocess(jaffeDir + jaffeImages.filenames[i], image) == 0) {
             // imshow("Face", image);
             // waitKey(0);
-            gabor = ImageToFV(image);
-            int pred = svm->predict(gabor);
-            cout << "Predicted: " << pred << endl;
-            cout << "Actual: " << jaffeImages.labels[i] << endl;
-            if (pred == jaffeImages.labels[i]) {
-                correct++;
+            test_x = ImageToFV(image, stddev);
+            reduced_test_x = adaboost.reduce_features(test_x);
+            int response = svm->predict(reduced_test_x);
+            cout << response << " vs " << jaffeImages.labels[i] << endl;
+            if (response == jaffeImages.labels[i]) {
+              ++correct;
             }
-            total++;
+              ++total;
         }
     }
-    
-    cout << "Overall Accuracy: " << correct/total << endl;
+
+    cout << "Overall Accuracy: " << (double)correct/(double)total << endl;
 
     return 0;
 }

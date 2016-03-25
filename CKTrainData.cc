@@ -1,5 +1,61 @@
 #include "CKTrainData.h"
 
+CKTrainData::CKTrainData(bool use_gabor, float gabor_stddev) {
+  iterate_ck_images();
+  iterate_ck_labels();
+  check_files();
+
+  Mat m, gabor_features;
+  Data current_person(Mat(0,0,CV_32F), Mat(0,0,CV_32SC1));
+
+  for (unsigned int i = 0; i < filenames.size() ; ++i) {
+    current_person.x.release();
+    current_person.t.release();
+
+    for (unsigned int j = 0; j < filenames[i].size(); ++j) {
+
+      // ignore unlabeled examples and examples labeled contempt
+      if (labels[i][j] == -1 || labels[i][j] == 2) continue;
+      if (preprocess(filenames[i][j][0], m) != 0) {
+        cout << "preprocess failed: " << filenames[i][j][0] << endl;
+        exit(1);
+      }
+
+      if (use_gabor) {
+        gabor_features = ImageToFV(m,gabor_stddev);
+      } else {
+        gabor_features.release();
+        m.convertTo(gabor_features, CV_32F, 1.0/255.0);
+        gabor_features = gabor_features.reshape(1,1);
+        normalize(gabor_features, gabor_features, -1, 1, NORM_MINMAX, CV_32F);
+      }
+
+      // first frame in sequence. label = neutral = 2. 2 was old contempt label
+      current_person.x.push_back(gabor_features);
+      current_person.t.push_back(Mat(1, 1, CV_32SC1, 2));
+
+      unsigned int end = filenames[i][j].size();
+      if (preprocess(filenames[i][j][end-1], m) != 0) {
+        cout << "preprocess failed: " << filenames[i][j][end-1] << endl;
+        exit(1);
+      }
+      if (use_gabor) {
+        gabor_features = ImageToFV(m,gabor_stddev);
+      } else {
+        gabor_features.release();
+        m.convertTo(gabor_features, CV_32F, 1.0/255.0);
+        gabor_features = gabor_features.reshape(1,1);
+        normalize(gabor_features, gabor_features, -1, 1, NORM_MINMAX, CV_32F);
+      }
+
+      // last frame in sequence. label = labels[i][j]
+      current_person.x.push_back(gabor_features);
+      current_person.t.push_back(Mat(1, 1, CV_32SC1, labels[i][j]));
+    }
+    people_data.push_back(current_person);
+  }
+}
+
 void CKTrainData::iterate_ck_images() {
 
   unsigned int i = 0, j = 0;
@@ -95,12 +151,6 @@ void CKTrainData::iterate_ck_labels() {
   }
 }
 
-void CKTrainData::init() {
-  iterate_ck_images();
-  iterate_ck_labels();
-  check_data();
-}
-
 void CKTrainData::print_filenames() {
   for (unsigned int i = 0; i < filenames.size(); ++i) {
     cout << "------------------------- person " << i << " -------------------------\n\n";
@@ -123,7 +173,7 @@ void CKTrainData::print_labels() {
   }
 }
 
-void CKTrainData::check_data() {
+void CKTrainData::check_files() {
   if (filenames.size() != labels.size()) {
     cout << "filenames and labels sizes do not match\n";
   }
@@ -135,4 +185,17 @@ void CKTrainData::check_data() {
       cout << filenames[i][0][0] << endl;
     }
   }
+}
+
+vector<Data> CKTrainData::get_people_data() {
+  return people_data;
+}
+
+Data CKTrainData::get_flat_data() {
+  Data data(Mat(0, 0, CV_32F), Mat(0, 0, CV_32SC1));
+  for(unsigned int i = 0; i < people_data.size(); ++i) {
+    data.x.push_back(people_data[i].x);
+    data.t.push_back(people_data[i].t);
+  }
+  return data;
 }
