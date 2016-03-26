@@ -10,6 +10,8 @@
 #include "gabor_filter.h"
 #include "CKTrainData.h"
 #include "adaboost.h"
+#include "ConfusionMatrix.h"
+#include "SVMOneVsAll.h"
 
 //emotion mapping:
 //  0-7 (i.e.

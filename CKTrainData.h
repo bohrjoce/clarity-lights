@@ -7,9 +7,9 @@
 #include <string>
 #include <opencv2/opencv.hpp>
 #include <boost/filesystem.hpp>
-#include "data.h"
 #include "preprocess.h"
 #include "gabor_filter.h"
+#include "data.h"
 
 using namespace std;
 using namespace cv;
@@ -34,16 +34,19 @@ class CKTrainData {
     vector< vector< vector< string >>> filenames;
     vector< vector< int >> labels;
     vector<Data> people_data;
+    vector< vector < string >> filename_data;
     void iterate_ck_images();
     void iterate_ck_labels();
     void check_files();
 
   public:
-    CKTrainData(bool use_gabor, float gabor_stddev);
+    CKTrainData(bool use_gabor = true, float gabor_stddev = 2.0, double spacial_aspect = 2.0);
     void print_filenames();
+    void partition_LOO_data(Data &train, Data &test, unsigned int person);
     void print_labels();
     string get_filename(int speaker, int sequence, int image);
-    vector<Data> get_people_data();
+    unsigned int get_num_people();
+    vector<vector<string>> get_filename_data();
     Data get_flat_data();
 };
 

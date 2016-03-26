@@ -14,7 +14,7 @@ using namespace cv;
 static const Size finalSize(448, 448);
 
 using namespace std;
-Mat ImageToFV(Mat inputImage, float stddev, int filtSize, bool visualize)
+Mat ImageToFV(Mat inputImage, float stddev, int filtSize,double spacial_aspect,  bool visualize)
 {
   Mat imageOutput;
   Mat rFilter;
@@ -48,20 +48,20 @@ Mat ImageToFV(Mat inputImage, float stddev, int filtSize, bool visualize)
           stddev, //standard deviation of the envelope
           pi*j/8.0, //theta value, orientation of gaussian
           wavelength[i], //wavelength of sinusiod, determines freq center of guassian
-          2, //"spacial aspect" which is just scaling of y dimension of guassian
+          spacial_aspect, //"spacial aspect" which is just scaling of y dimension of guassian
           0, //phase offset of sinusoids, who cares
           CV_32F, //filter type, either CV_32F or CV_64F
-          true //real or imaginary portion of filter 
+          true //real or imaginary portion of filter
           );
       iFilter = getGaborFilter(
           Size(filtSize,filtSize), //size of the filter
           stddev, //standard deviation of the envelope
           pi*j/8.0, //theta value, orientation of gaussian
           wavelength[i], //wavelength of sinusiod, determines freq center of guassian
-          2, //"spacial aspect" which is just scaling of y dimension of guassian
+          spacial_aspect, //"spacial aspect" which is just scaling of y dimension of guassian
           0, //phase offset of sinusoids, who cares
           CV_32F, //filter type, either CV_32F or CV_64F
-          false //real or imaginary portion of filter 
+          false //real or imaginary portion of filter
           );
       filter2D(
           image, //input image
@@ -78,8 +78,8 @@ Mat ImageToFV(Mat inputImage, float stddev, int filtSize, bool visualize)
 
       cv::pow(realRes,2.0, realRes);
       cv::pow(imaginaryRes,2.0, imaginaryRes);
-      cv::add(realRes, imaginaryRes, filterOutput); 
-      cv::sqrt(filterOutput,filterOutput); 
+      cv::add(realRes, imaginaryRes, filterOutput);
+      cv::sqrt(filterOutput,filterOutput);
 
       //         cout << " wavelength is " << wavelength << "\nphase is " << pi*j/8.0 <<endl;
       //cout << " max pixel value is " << max << endl;
@@ -89,7 +89,8 @@ Mat ImageToFV(Mat inputImage, float stddev, int filtSize, bool visualize)
       featureVector.push_back(filterOutput);
       transpose(filterOutput,filterOutput); 
       col.push_back(filterOutput);
-      //filterOutput = filterOutput/max; 
+
+      //filterOutput = filterOutput/max;
       //imageOutput = filterOutput.clone()/max;
       //resize(imageOutput, filterOutput, finalSize);
       //imshow( "imOutput",filterOutput);

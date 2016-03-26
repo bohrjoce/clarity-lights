@@ -5,9 +5,9 @@
 #include <cstdlib>
 
 #include "CKTrainData.h"
-#include "preprocess.h"
-#include "gabor_filter.h"
 #include "adaboost.h"
+#include "SVMOneVsAll.h"
+#include "ConfusionMatrix.h"
 
 using namespace cv;
 using namespace ml;
@@ -15,65 +15,60 @@ using namespace std;
 
 int main(int argc, char *argv[]) {
 
-  float stddev = atof(argv[1]);
+  float stddev = 2.0;
+  double spacial_aspect = 2.0;
+  double C = 10.0;
+  unsigned int weak_learners = 92;
+  cout << "stddev = " << stddev << endl;
+  cout << "spacial_aspect = " << spacial_aspect << endl;
+  cout << "C = " << C << endl;
+  cout << "weak_learners = " << weak_learners << endl;
 
-  CKTrainData ckdata(true, stddev);
-  vector<Data> people_data = ckdata.get_people_data();
+  CKTrainData ckdata(true, stddev, spacial_aspect);
+  unsigned int num_people = ckdata.get_num_people();
 
-  // init svm
-  Ptr<SVM> svm = SVM::create();
-  svm->setType(SVM::C_SVC);
-  svm->setKernel(SVM::LINEAR);
+  vector<vector<string>> filename_data = ckdata.get_filename_data();
 
-  int correct = 0;
-  double accuracy = 0;
-  int total = 0;
+  SVMOneVsAll svm(C); // init svm
+
+  ConfusionMatrix confusion_matrix;
+
+  vector<string> test_filenames;
   Data train(Mat(0, 0, CV_32F), Mat(0, 0, CV_32SC1));
   Data test(Mat(0, 0, CV_32F), Mat(0, 0, CV_32SC1));
 
   // Adaboost
   Data adaboost_data = ckdata.get_flat_data();
-  Adaboost adaboost = Adaboost(adaboost_data.x, adaboost_data.t, 82, false);
+  Adaboost adaboost = Adaboost(adaboost_data.x, adaboost_data.t, weak_learners, false);
 
-  for(unsigned int i = 0; i < people_data.size(); ++i) {
-    cout << " on person: " << i << endl;
-    train.x.release();
-    train.t.release();
-    test.x.release();
-    test.t.release();
+  for(unsigned int person = 0; person < num_people; ++person) {
+//    cout << " on person: " << person << endl;
 
-    for (unsigned int j = 0; j < people_data.size(); ++j){
-      if (j == i) {
-        test.x.push_back(people_data[j].x);
-        test.t.push_back(people_data[j].t);
-      } else {
-        train.x.push_back(people_data[j].x);
-        train.t.push_back(people_data[j].t);
-      }
-    }
+    ckdata.partition_LOO_data(train, test, person);
 
     if (train.x.rows <= 0 || test.x.rows <= 0) {
-      cout << "Empty train or test set." << endl;
       continue;
     }
 
     Mat reduced_train_x = adaboost.reduce_features(train.x);
     Mat reduced_test_x = adaboost.reduce_features(test.x);
 
-    svm->train(reduced_train_x, ROW_SAMPLE, train.t);
+    svm.train(reduced_train_x, train.t);
 
     for (int i = 0; i < reduced_test_x.rows; ++i) {
-      int response = svm->predict(reduced_test_x.row(i));
-      cout << response << " vs " << (int)test.t.at<int>(i) << endl;
-      if (response == (int)test.t.at<int>(i)) ++correct;
+      int response = svm.predict(reduced_test_x.row(i));
+      int truth = test.t.at<int>(i);
+      confusion_matrix.update(response, truth);
+      if (response != truth) {
+        // Do something with filename if incorrectly classified
+        // cout << test_filenames[i] << endl;
+        // Mat image = imread(test_filenames[i], CV_LOAD_IMAGE_COLOR);
+        // namedWindow("Misclassified Image", WINDOW_AUTOSIZE);
+        // imshow("Misclassified Image", image);
+        // waitKey(0);
+      }
     }
-    total += reduced_test_x.rows;
-    accuracy = (double)correct/(double)total;
-    cout << " current acc: " << accuracy << endl;
   }
-  accuracy = (double)correct/(double)total;
-
-  cout << "accuracy : " << accuracy << endl;
-
+  confusion_matrix.print();
   return 0;
 }

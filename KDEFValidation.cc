@@ -75,26 +75,30 @@ void KDEFValidation::print_samples(){
 
 int main(int argc, char *argv[]) {
   KDEFValidation kd;
-  float stddev = atof(argv[1]);
-  // kd.print_samples();
-
-  CKTrainData ckdata(true, stddev);
+  float stddev = 2.0;
+  double spacial_aspect = 2.0;
+  unsigned int weak_learners = 92;
+  double C = 10.0;
+  cout << "stddev = " << stddev << endl;
+  cout << "spacial_aspect = " << spacial_aspect << endl;
+  cout << "C = " << C << endl;
+  cout << "weak_learners = " << weak_learners << endl;
+  CKTrainData ckdata(true, stddev, spacial_aspect);
   Data train = ckdata.get_flat_data();
 
   Data adaboost_data = ckdata.get_flat_data();
-  Adaboost adaboost = Adaboost(adaboost_data.x, adaboost_data.t, 82, false);
-
+  Adaboost adaboost = Adaboost(adaboost_data.x, adaboost_data.t, weak_learners, false);
   Mat reduced_train_x = adaboost.reduce_features(train.x);
 
-  Ptr<SVM> svm = SVM::create();
-  svm->setType(SVM::C_SVC);
-  svm->setKernel(SVM::LINEAR);
-  svm->train(reduced_train_x, ROW_SAMPLE, train.t);
+  // init svm
+  SVMOneVsAll svm(C);
+  svm.train(reduced_train_x, train.t);
+
+  ConfusionMatrix confusion_matrix;
 
   Mat image, test_x, reduced_test_x;
   Mat testKDF(0, 0, CV_32F);
   Mat testKDL(0, 0, CV_32SC1);
-  int correct = 0, total = 0;
 
   for (unsigned int i = 0; i < kd.samples.size(); ++i){
     test_x.release();
@@ -105,15 +109,12 @@ int main(int argc, char *argv[]) {
     }
     test_x = ImageToFV(image, stddev);
     reduced_test_x = adaboost.reduce_features(test_x);
-    int response = svm->predict(reduced_test_x);
-    cout << response << " vs " << kd.samples[i].emotion << endl;
-    if (response == kd.samples[i].emotion) {
-      ++correct;
-    }
-    ++total;
+    int response = svm.predict(reduced_test_x);
+    int truth = kd.samples[i].emotion;
+//    cout << response << " vs " << truth << endl;
+    confusion_matrix.update(response, truth);
   }
-
-  cout << "Overall Accuracy: " << (double)correct/(double)total << endl;
+  confusion_matrix.print();
 
   return 0;
 }
