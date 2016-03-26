@@ -7,6 +7,6 @@ using namespace cv;
 
 using namespace std;
 
-Mat ImageToFV(Mat inputImage, float stddev = 8.0, int filtSize = 31);
+Mat ImageToFV(Mat inputImage, float stddev = 8.0, int filtSize = 31,bool visualize = true);
 
 #endif

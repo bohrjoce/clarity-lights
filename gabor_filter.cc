@@ -14,12 +14,14 @@ using namespace cv;
 static const Size finalSize(448, 448);
 
 using namespace std;
-Mat ImageToFV(Mat inputImage, float stddev, int filtSize)
+Mat ImageToFV(Mat inputImage, float stddev, int filtSize, bool visualize)
 {
+  Mat imageOutput;
   Mat rFilter;
   Mat iFilter;
   //we go in 1/2 octave steps, 8 different phases;
   //phase is in radians
+  Mat face = inputImage; 
   Mat filterOutput;
   Mat imOutput;
   Mat featureVector;
@@ -34,17 +36,19 @@ Mat ImageToFV(Mat inputImage, float stddev, int filtSize)
   //namedWindow( "imOutput", WINDOW_AUTOSIZE ); // Create a window for display.
   //five wavelengths, at a half-octave increase from eachother
   //a half-octave is sqrt(2) increase
-  float wavelength[] = {2.0,2.82,4.0,5.6568,8.0};
+ // float wavelength[] = {4.0,5.656,8.0,11.3137,16.0 };
+  float wavelength[] = {2.0,2.828,4.0,5.656,8.0};
+  
   //cout << "stddev is "<< stddev << endl;
   for (int i =0; i < 5; i++){
-
+    Mat col;
     for (int j = 0; j < 8; j++){
       rFilter = getGaborFilter(
           Size(filtSize,filtSize), //size of the filter
           stddev, //standard deviation of the envelope
           pi*j/8.0, //theta value, orientation of gaussian
           wavelength[i], //wavelength of sinusiod, determines freq center of guassian
-          .5, //"spacial aspect" which is just scaling of y dimension of guassian
+          2, //"spacial aspect" which is just scaling of y dimension of guassian
           0, //phase offset of sinusoids, who cares
           CV_32F, //filter type, either CV_32F or CV_64F
           true //real or imaginary portion of filter 
@@ -54,7 +58,7 @@ Mat ImageToFV(Mat inputImage, float stddev, int filtSize)
           stddev, //standard deviation of the envelope
           pi*j/8.0, //theta value, orientation of gaussian
           wavelength[i], //wavelength of sinusiod, determines freq center of guassian
-          .5, //"spacial aspect" which is just scaling of y dimension of guassian
+          2, //"spacial aspect" which is just scaling of y dimension of guassian
           0, //phase offset of sinusoids, who cares
           CV_32F, //filter type, either CV_32F or CV_64F
           false //real or imaginary portion of filter 
@@ -83,7 +87,8 @@ Mat ImageToFV(Mat inputImage, float stddev, int filtSize)
 
       //cout << "normalized max pixel value is " << max << endl;
       featureVector.push_back(filterOutput);
-
+      transpose(filterOutput,filterOutput); 
+      col.push_back(filterOutput);
       //filterOutput = filterOutput/max; 
       //imageOutput = filterOutput.clone()/max;
       //resize(imageOutput, filterOutput, finalSize);
@@ -92,12 +97,25 @@ Mat ImageToFV(Mat inputImage, float stddev, int filtSize)
       //waitKey(0); // Wait for a keystroke
 
 
-      //imshow( "imOutput",filterOutput);
-      //imshow( "Filter", filter);
-      //waitKey(0); // Wait for a keystroke
-
+     //REMOVE TODO 
+     
     }
+    Mat row;
+    transpose(col,row);
+    imageOutput.push_back(row); 
   }
+
+  Mat image_output; 
+  normalize(imageOutput, imageOutput, 0.0,1.0,  NORM_MINMAX, CV_32F);
+    
+  imageOutput.convertTo(image_output,CV_8U, 255.0);
+
+  //      resize(image_output, image_output, finalSize);
+  if(visualize){
+    imshow( "gabor_bank",image_output);
+    imshow( "face", face);
+    waitKey(0); // Wait for a keystroke
+  } 
   featureVector = featureVector.reshape(1,1);
   normalize(featureVector, featureVector, 0.0,1.0,  NORM_MINMAX, CV_32F);
 
