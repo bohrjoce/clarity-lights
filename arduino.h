@@ -1,7 +1,7 @@
 #ifndef ARDUINO_H
 #define ARDUINO_H
 
-#include <cstdio>
+#include <cstddef>
 
 class Color {
 public:
