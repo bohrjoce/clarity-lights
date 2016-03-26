@@ -1,6 +1,5 @@
 #include "arduino.h"
 #include <iostream>
-#include <cstdio>
 #include <string>
 #include <cstdlib>
 #include <vector>
@@ -15,9 +14,31 @@
 
 using namespace std;
 
-// Send byte to Arduino; returns success
-bool Arduino::send_byte(int fd, unsigned char byte) {
-    if (write(fd, &byte, 1) == 1) {
+// Color constructor
+Color::Color(unsigned int r_, unsigned int g_, unsigned int b_) {
+    if (r_ > 255) r_ = 255;
+    if (g_ > 255) g_ = 255;
+    if (b_ > 255) b_ = 255;
+    r = r_;
+    g = g_;
+    b = b_;
+}
+
+// Send bytes to Arduino; returns success
+bool Arduino::send_bytes(int fd, unsigned char bytes[], size_t nbytes) {
+    // if (write(fd, &bytes, 1) == 1) {
+    //     printf("Successful write.\n");
+    //     return true;
+    // } else {
+    //     printf("Unsuccessful write.\n");
+    //     return false;
+    // }
+    uint bytes_written, spot = 0;
+    do {
+        bytes_written = write(fd, &bytes[spot], nbytes - spot);
+        spot += bytes_written;
+    } while (spot < nbytes && bytes_written > 0);
+    if (spot == nbytes) {
         printf("Successful write.\n");
         return true;
     } else {
@@ -26,15 +47,27 @@ bool Arduino::send_byte(int fd, unsigned char byte) {
     }
 }
 
-// Read byte from Arduino; returns byte read
-unsigned char Arduino::read_byte(int fd) {
-    unsigned char byte = '\0';
-    if (read(fd, &byte, 1) == 1) {
+// Read nbytes from Arduino; returns success
+bool Arduino::read_bytes(int fd, unsigned char bytes[], size_t nbytes) {
+    // unsigned char byte = '\0';
+    // if (read(fd, &byte, 1) == 1) {
+    //     printf("Successful read.\n");
+    // } else {
+    //     printf("Unsuccessful read.\n");
+    // }
+    // return byte;
+    uint bytes_read, spot = 0;
+    do {
+        bytes_read = read(fd, &bytes[spot], nbytes - spot);
+        spot += bytes_read;
+    } while(spot < nbytes && bytes_read > 0);
+    if (spot == nbytes) {
         printf("Successful read.\n");
+        return true;
     } else {
         printf("Unsuccessful read.\n");
+        return false;
     }
-    return byte;
 }
 
 // Initialize and verify whether a device is our Arduino
@@ -72,18 +105,20 @@ bool Arduino::verify(const char* device, int &fd) {
     }
 
     // Verify device as correct Arduino
-    unsigned char rand_byte = (unsigned char)rand();
+    unsigned char rand_bytes[3] = {
+        (unsigned char)rand(),
+        (unsigned char)rand(),
+        (unsigned char)rand()
+    };
+    unsigned char response[3] = {'\0', '\0', '\0'};
     usleep(2000000);
-    if (!send_byte(fd, rand_byte)) {
-        return false;
-    }
+    if (!send_bytes(fd, rand_bytes, 3)) return false;
     usleep(2000000);
-    unsigned char response = read_byte(fd);
-    if (rand_byte == response) {
-        return true;
-    } else {
-        return false;
+    if (!read_bytes(fd, response, 3)) return false;
+    for (unsigned int i = 0; i < 3; i++) {
+        if (rand_bytes[i] != response[i]) return false;
     }
+    return true;
 }
 
 // Default constructor
@@ -102,42 +137,53 @@ bool Arduino::init() {
         printf("Attempting to verify device %s.\n", devices[i].c_str());
         if (verify(devices[i].c_str(), arduino)) {
             device_verified = true;
-            printf("Arduino found.\n");
+            printf("Verification successful.\n");
             return true;
         } else {
             printf("Verification failed.\n");
         }
     }
-    printf("Arduino not found.\n");
     return false;
 }
 
 // Set emotion on Arduino
-bool Arduino::set_rgb(unsigned char r, unsigned char g, unsigned char b) {
+bool Arduino::set_color(Color color) {
+    // Check that device is verified
     if (!device_verified) {
         printf("Device has not yet been verified.\n");
         return false;
     }
-    if (!send_byte(arduino, emot)) {
-        printf("Setting emotion failed.\n");
-        return false;
-    }
+    // Send color and check response
+    unsigned char rgb[3] = {color.r, color.g, color.b};
+    unsigned char response[3] = {'\0', '\0', '\0'};
+    if (!send_bytes(arduino, rgb, 3)) return false;
     usleep(1000000);
-    unsigned char response = read_byte(arduino);
-    if (emot == response) {
-        printf("Emotion set successfully.\n");
-        return true;
-    } else {
-        printf("Setting emotion failed.\n");
-        return false;
+    if (!read_bytes(arduino, response, 3)) return false;
+    for (unsigned int i = 0; i < 3; i++) {
+        if (rgb[i] != response[i]) return false;
     }
+    return true;
 }
 
 int main() {
 
+    unsigned int a = 49;
+    unsigned char b = a;
+    cout << "a = " << a << ", b = " << b << endl;
+
+    return 0;
+
     Arduino arduino;
-    arduino.init();
-    arduino.set_rgb(1, 2, 3);
+    if (arduino.init()) {
+        printf("Arduino found.\n");
+        if (arduino.set_color(Color(1, 2, 3))) {
+            printf("Color set successfully.\n");
+        } else {
+            printf("Setting color failed.\n");
+        }
+    } else {
+        printf("Arduino not found.\n");
+    }
 
     return 0;
 }
