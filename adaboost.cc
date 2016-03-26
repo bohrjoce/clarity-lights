@@ -1,13 +1,12 @@
 #include "adaboost.h"
 #include <set>
-// #include "NuggetBoost.h"
+#include <sys/stat.h>
 
 using namespace std;
 using namespace cv;
 using namespace ml;
 
-Adaboost::Adaboost(Mat data_, Mat labels_, unsigned int weak_learners,
-    bool retrain) {
+Adaboost::Adaboost(Mat data_, Mat labels_, unsigned int weak_learners, bool retrain) {
 
   cout << "Adaboost feature selection\n";
   // Error checking
@@ -43,13 +42,13 @@ Adaboost::Adaboost(Mat data_, Mat labels_, unsigned int weak_learners,
       boost->train(data, ROW_SAMPLE, labels[i]);
       boost->save(savedir);
     } else {
-      boost = StatModel::load<Boost>(savedir);
-      if (boost == nullptr) {
-        cout << savedir << " doesn't exist" << endl;
-        exit(1);
+      struct stat buffer;
+      if (stat(savedir.c_str(), &buffer) != 0) {
+        cout << "saved model doesn't exist. rerun adaboost with retrain == true" << endl;
+        exit(0);
       }
+      boost = StatModel::load<Boost>(savedir);
     }
-
     vector<DTrees::Split> splits = boost->getSplits();
     /*// Print features selected
     for (unsigned int i = 0; i < splits.size(); i++) {

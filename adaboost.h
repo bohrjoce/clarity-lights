@@ -4,7 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <set>
-#include "data.h"
+#include <opencv2/opencv.hpp>
 
 const unsigned int NUM_EMOTIONS = 7;
 
@@ -14,8 +14,8 @@ class Adaboost {
     std::vector<cv::Mat> labels; // Index i is Mat of binary labels for emotion i
     std::set<int> weak_learners_indices;
   public:
-    Adaboost(cv::Mat data_, cv::Mat labels_, unsigned int weak_learners,
-        bool retrain);
+    Adaboost(cv::Mat data_, cv::Mat labels_, unsigned int weak_learners = 82,
+        bool retrain = true);
     cv::Mat reduce_features(const cv::Mat &original_mat);
 };
 

@@ -1,6 +1,6 @@
 #include "CKTrainData.h"
 
-CKTrainData::CKTrainData(bool use_gabor, float gabor_stddev) {
+CKTrainData::CKTrainData(bool use_gabor, float gabor_stddev, double spacial_aspect) {
   iterate_ck_images();
   iterate_ck_labels();
   check_files();
@@ -22,7 +22,7 @@ CKTrainData::CKTrainData(bool use_gabor, float gabor_stddev) {
       }
 
       if (use_gabor) {
-        gabor_features = ImageToFV(m,gabor_stddev);
+        gabor_features = ImageToFV(m,gabor_stddev,31,spacial_aspect);
       } else {
         gabor_features.release();
         m.convertTo(gabor_features, CV_32F, 1.0/255.0);
@@ -40,7 +40,7 @@ CKTrainData::CKTrainData(bool use_gabor, float gabor_stddev) {
         exit(1);
       }
       if (use_gabor) {
-        gabor_features = ImageToFV(m,gabor_stddev);
+        gabor_features = ImageToFV(m,gabor_stddev,31,spacial_aspect);
       } else {
         gabor_features.release();
         m.convertTo(gabor_features, CV_32F, 1.0/255.0);

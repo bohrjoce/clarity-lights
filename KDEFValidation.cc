@@ -75,26 +75,36 @@ void KDEFValidation::print_samples(){
 
 int main(int argc, char *argv[]) {
   KDEFValidation kd;
-  float stddev = atof(argv[1]);
+  float stddev = 2.0;
+  double spacial_aspect = 2.0;
+  double C_val = 10.0;
   // kd.print_samples();
 
-  CKTrainData ckdata(true, stddev);
+  CKTrainData ckdata(true, stddev, spacial_aspect);
   Data train = ckdata.get_flat_data();
 
   Data adaboost_data = ckdata.get_flat_data();
-  Adaboost adaboost = Adaboost(adaboost_data.x, adaboost_data.t, 82, false);
+  unsigned int weak_learners = 92;
+  Adaboost adaboost = Adaboost(adaboost_data.x, adaboost_data.t, weak_learners, false);
 
   Mat reduced_train_x = adaboost.reduce_features(train.x);
 
   Ptr<SVM> svm = SVM::create();
   svm->setType(SVM::C_SVC);
   svm->setKernel(SVM::LINEAR);
+  svm->setC(C_val);
   svm->train(reduced_train_x, ROW_SAMPLE, train.t);
 
   Mat image, test_x, reduced_test_x;
   Mat testKDF(0, 0, CV_32F);
   Mat testKDL(0, 0, CV_32SC1);
   int correct = 0, total = 0;
+  vector<int> emote_total(NUM_EMOTIONS, 0);
+  vector<int> emote_correct(NUM_EMOTIONS, 0);
+  vector<vector<int>> confusion(NUM_EMOTIONS, vector<int>());
+  for (unsigned int i = 0; i < NUM_EMOTIONS; ++i) {
+    confusion[i] = vector<int>(NUM_EMOTIONS, 0);
+  }
 
   for (unsigned int i = 0; i < kd.samples.size(); ++i){
     test_x.release();
@@ -106,14 +116,34 @@ int main(int argc, char *argv[]) {
     test_x = ImageToFV(image, stddev);
     reduced_test_x = adaboost.reduce_features(test_x);
     int response = svm->predict(reduced_test_x);
-    cout << response << " vs " << kd.samples[i].emotion << endl;
-    if (response == kd.samples[i].emotion) {
+    int truth = kd.samples[i].emotion;
+    cout << response << " vs " << truth << endl;
+    if (response == truth) {
       ++correct;
     }
+    ++emote_total[truth-1];
+    ++confusion[truth-1][response-1];
     ++total;
   }
 
-  cout << "Overall Accuracy: " << (double)correct/(double)total << endl;
-
+  double accuracy_sum = 0;
+  double accuracy = (double)correct/(double)total;
+  cout << "accuracy : " << accuracy << endl;
+  for (unsigned int i = 0; i < NUM_EMOTIONS; ++i) {
+    accuracy = (double)confusion[i][i]/(double)emote_total[i];
+    accuracy_sum += accuracy;
+    cout << "emotion " << i+1 << " accuracy : " << confusion[i][i] << "/" <<
+        emote_total[i] << " = " << accuracy << endl;
+  }
+  cout << "UAR : " << accuracy_sum/(double)NUM_EMOTIONS << endl;
+  cout << "Confusion matrix: left actual, top predicted" << endl;
+  cout << "1    2    3    4    5    6    7\n\n";
+  for (unsigned int i = 0; i < NUM_EMOTIONS; ++i) {
+    cout << i+1 << "  ";
+    for (unsigned int j = 0; j < NUM_EMOTIONS; ++j) {
+      cout << confusion[i][j] << " ";
+    }
+    cout << endl;
+  }
   return 0;
 }
