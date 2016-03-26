@@ -166,13 +166,7 @@ bool Arduino::set_color(Color color) {
 }
 
 int main() {
-
-    unsigned int a = 49;
-    unsigned char b = a;
-    cout << "a = " << a << ", b = " << b << endl;
-
-    return 0;
-
+    
     Arduino arduino;
     if (arduino.init()) {
         printf("Arduino found.\n");
