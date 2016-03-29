@@ -1,9 +1,11 @@
 #include "arduino.h"
 #include <iostream>
 #include <vector>
+#include <cstring>
 #include <unistd.h>
 #include <fcntl.h>
 #include <termios.h>
+#include <stdio.h>
 
 using namespace std;
 
@@ -76,12 +78,12 @@ bool Arduino::verify(const char* device, int &fd) {
     port_settings.c_cflag &= ~CSIZE;
     port_settings.c_cflag |= CS8;
     port_settings.c_cc[VMIN] = 1;
-    port_settings.c_cc[VTIME] = 5;
+    port_settings.c_cc[VTIME] = 10;
     port_settings.c_cflag |= CREAD | CLOCAL;
     cfmakeraw(&port_settings);
 
     // Flush port and apply the settings to the port
-    tcflush(fd, TCIFLUSH);
+    tcflush(fd, TCIOFLUSH);
     if (tcsetattr(fd, TCSANOW, &port_settings) != 0) {
         printf("Error applying port settings.\n");
         return false;
@@ -108,14 +110,27 @@ bool Arduino::verify(const char* device, int &fd) {
 Arduino::Arduino() : device_verified(false) {};
 
 // Initialize Arduino class; find location of the Arduino and set file descriptor
+// Returns true if successful
 bool Arduino::init() {
-    // Construct list of candidate devices; Todo
+    // Construct list of candidate devices
     vector<string> devices;
-    devices.push_back("/dev/ttyACM2");
-    devices.push_back("/dev/ttyACM1");
-    devices.push_back("/dev/ttyACM0");
+    FILE * f = popen("ls /dev/tty*", "r");
+    const int BUFSIZE = 1000;
+    char buf[BUFSIZE];
+    char acm[] = "ACM", usb[] = "USB";
+    if (f == 0) {
+        printf("Could not execute linux command.\n");
+        return false;
+    }
+    while(fgets(buf, BUFSIZE, f)) {
+        if(strstr(buf, acm) != NULL || strstr(buf, usb) != NULL) {
+            buf[strcspn(buf, "\r\n")] = 0;
+            devices.push_back(buf);
+        }
+    }
+    pclose(f);
 
-    // Verify and set file descriptor
+    // Verify device and set file descriptor
     for (unsigned int i = 0; i < devices.size(); i++) {
         printf("Attempting to verify device %s.\n", devices[i].c_str());
         if (verify(devices[i].c_str(), arduino)) {
@@ -130,6 +145,7 @@ bool Arduino::init() {
 }
 
 // Send desired light strip color to Arduino
+
 bool Arduino::set_color(Color color) {
     // Check that device is verified
     if (!device_verified) {
@@ -137,13 +153,18 @@ bool Arduino::set_color(Color color) {
         return false;
     }
 
+    // Flush data
+    tcflush(arduino, TCIOFLUSH);
+
     // Send color and check response
     unsigned char rgb[3] = {color.r, color.g, color.b};
     unsigned char response[3] = {'\0', '\0', '\0'};
     if (!send_bytes(arduino, rgb, 3)) return false;
     usleep(1000000);
     if (!read_bytes(arduino, response, 3)) return false;
+    cout << "Sent\tReceived\t" << endl;
     for (unsigned int i = 0; i < 3; i++) {
+        cout << rgb[i] << "\t" << response[i] << endl;
         if (rgb[i] != response[i]) return false;
     }
     return true;
