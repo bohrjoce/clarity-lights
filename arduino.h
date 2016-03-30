@@ -3,6 +3,8 @@
 
 #include <cstddef>
 
+const unsigned int ONE_SECOND = 1000000;
+
 class Color {
 public:
     unsigned char r, g, b;

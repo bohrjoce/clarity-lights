@@ -96,9 +96,9 @@ bool Arduino::verify(const char* device, int &fd) {
         (unsigned char)rand()
     };
     unsigned char response[3] = {'\0', '\0', '\0'};
-    usleep(2000000);
+    usleep(2*ONE_SECOND);
     if (!send_bytes(fd, rand_bytes, 3)) return false;
-    usleep(2000000);
+    usleep(2*ONE_SECOND);
     if (!read_bytes(fd, response, 3)) return false;
     for (unsigned int i = 0; i < 3; i++) {
         if (rand_bytes[i] != response[i]) return false;
@@ -145,7 +145,6 @@ bool Arduino::init() {
 }
 
 // Send desired light strip color to Arduino
-
 bool Arduino::set_color(Color color) {
     // Check that device is verified
     if (!device_verified) {
@@ -160,7 +159,7 @@ bool Arduino::set_color(Color color) {
     unsigned char rgb[3] = {color.r, color.g, color.b};
     unsigned char response[3] = {'\0', '\0', '\0'};
     if (!send_bytes(arduino, rgb, 3)) return false;
-    usleep(1000000);
+    usleep(ONE_SECOND);
     if (!read_bytes(arduino, response, 3)) return false;
     cout << "Sent\tReceived\t" << endl;
     for (unsigned int i = 0; i < 3; i++) {

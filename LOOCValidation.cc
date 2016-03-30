@@ -18,6 +18,7 @@ int main(int argc, char *argv[]) {
 
   CKTrainData ckdata(true, stddev, spacial_aspect);
   vector<Data> people_data = ckdata.get_people_data();
+  vector<vector<string>> filename_data = ckdata.get_filename_data();
 
   // init svm
   Ptr<SVM> svm = SVM::create();
@@ -35,6 +36,7 @@ int main(int argc, char *argv[]) {
   }
 
   vector<double> C_vals = {0.1, 1.0, 10.0};
+  vector<string> test_filenames;
   Data train(Mat(0, 0, CV_32F), Mat(0, 0, CV_32SC1));
   Data test(Mat(0, 0, CV_32F), Mat(0, 0, CV_32SC1));
 
@@ -65,6 +67,7 @@ for (unsigned int i = 0; i < NUM_EMOTIONS; ++i) {
       if (j == i) {
         test.x.push_back(people_data[j].x);
         test.t.push_back(people_data[j].t);
+        test_filenames = filename_data[j];
       } else {
         train.x.push_back(people_data[j].x);
         train.t.push_back(people_data[j].t);
@@ -87,6 +90,13 @@ for (unsigned int i = 0; i < NUM_EMOTIONS; ++i) {
   //    cout << response << " vs " << truth << endl;
       if (response == truth) {
         ++correct;
+      } else {
+        // Do something with filename if incorrectly classified
+        // cout << test_filenames[i] << endl;
+        // Mat image = imread(test_filenames[i], CV_LOAD_IMAGE_COLOR);
+        // namedWindow("Misclassified Image", WINDOW_AUTOSIZE);
+        // imshow("Misclassified Image", image);
+        // waitKey(0);
       }
       ++emote_total[truth-1];
       ++confusion[truth-1][response-1];
