@@ -169,29 +169,29 @@ bool Arduino::set_color(Color color) {
     return true;
 }
 
-int main() {
+// int main() {
 
-    // Example of use
-    Arduino arduino;
-    int r, g, b;
-    if (arduino.init()) {
-        printf("Arduino found.\n");
-        while (1) {
-            printf("r = ");
-            cin >> r;
-            printf("g = ");
-            cin >> g;
-            printf("b = ");
-            cin >> b;
-            if (arduino.set_color(Color(r, g, b))) {
-                printf("Color set successfully.\n");
-            } else {
-                printf("Setting color failed.\n");
-            }
-        }
-    } else {
-        printf("Arduino not found.\n");
-    }
+//     // Example of use
+//     Arduino arduino;
+//     int r, g, b;
+//     if (arduino.init()) {
+//         printf("Arduino found.\n");
+//         while (1) {
+//             printf("r = ");
+//             cin >> r;
+//             printf("g = ");
+//             cin >> g;
+//             printf("b = ");
+//             cin >> b;
+//             if (arduino.set_color(Color(r, g, b))) {
+//                 printf("Color set successfully.\n");
+//             } else {
+//                 printf("Setting color failed.\n");
+//             }
+//         }
+//     } else {
+//         printf("Arduino not found.\n");
+//     }
 
-    return 0;
-}
+//     return 0;
+// }

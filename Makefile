@@ -30,8 +30,8 @@ filesystem: filesystem.cc CKTrainData.cc
 arduino: arduino.cc
 	$(CC) $(CFLAGS) arduino.cc -std=c++11 -o $@
 
-take_photo: take_photo.cc preprocess.cc gabor_filter.cc gabor_impl.cc
-	$(CC) $(CFLAGS) take_photo.cc preprocess.cc gabor_filter.cc gabor_impl.cc -std=c++11 -o $@ $(LIBS)
+take_photo: take_photo.cc preprocess.cc gabor_filter.cc gabor_impl.cc adaboost.cc arduino.cc SVMOneVsAll.cc
+	$(CC) $(CFLAGS) take_photo.cc preprocess.cc gabor_filter.cc gabor_impl.cc adaboost.cc arduino.cc SVMOneVsAll.cc -std=c++11 -o $@ $(LIBS)
 
 clean:
 	rm -rf *.o svm arduino take_photo LOOCValidation KDEFValidation JAFFEValidation
