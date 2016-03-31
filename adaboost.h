@@ -2,9 +2,12 @@
 #define ADABOOST_H
 
 #include <iostream>
+#include <fstream>
 #include <vector>
+#include <string>
 #include <set>
 #include <opencv2/opencv.hpp>
+#include <sys/stat.h>
 
 const unsigned int NUM_EMOTIONS = 7;
 
@@ -16,7 +19,9 @@ class Adaboost {
   public:
     Adaboost(cv::Mat data_, cv::Mat labels_, unsigned int weak_learners = 82,
         bool retrain = true);
+    Adaboost(std::string loadfile);
     cv::Mat reduce_features(const cv::Mat &original_mat);
+    void save_features(std::string savefile);
 };
 
 #endif

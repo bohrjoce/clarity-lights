@@ -1,6 +1,4 @@
 #include "adaboost.h"
-#include <set>
-#include <sys/stat.h>
 
 using namespace std;
 using namespace cv;
@@ -8,7 +6,6 @@ using namespace ml;
 
 Adaboost::Adaboost(Mat data_, Mat labels_, unsigned int weak_learners, bool retrain) {
 
-  cout << "Adaboost feature selection\n";
   // Error checking
   if (data_.rows != labels_.rows || labels_.cols != 1) {
     cout << "Mats are formatted incorectly." << endl;
@@ -61,7 +58,7 @@ Adaboost::Adaboost(Mat data_, Mat labels_, unsigned int weak_learners, bool retr
     }
   }
 
-  cout << "Total # features = " << weak_learners_indices.size() << endl;
+//  cout << "Total # features = " << weak_learners_indices.size() << endl;
 
   // // Print labels
   // cout << "Binary labels:" << endl;
@@ -86,6 +83,19 @@ Adaboost::Adaboost(Mat data_, Mat labels_, unsigned int weak_learners, bool retr
   // }
 }
 
+Adaboost::Adaboost(string loadfile) {
+  ifstream ifile;
+  ifile.open(loadfile.c_str());
+  int value;
+  while (ifile >> value) {
+    weak_learners_indices.insert(value);
+  }
+  if (weak_learners_indices.empty()) {
+    cout << "could not find features.txt" << endl;
+    exit(0);
+  }
+}
+
 Mat Adaboost::reduce_features(const Mat &original_mat) {
 
     Mat reduced_mat(original_mat.rows, 0, CV_32F);
@@ -95,4 +105,13 @@ Mat Adaboost::reduce_features(const Mat &original_mat) {
       hconcat(reduced_mat, original_mat.col(*it), reduced_mat);
     }
     return reduced_mat;
+}
+
+void Adaboost::save_features(string savefile) {
+  ofstream ofile;
+  ofile.open(savefile.c_str());
+  for (set<int>::iterator it = weak_learners_indices.begin();
+      it != weak_learners_indices.end(); it++) {
+    ofile << *it << endl;
+  }
 }

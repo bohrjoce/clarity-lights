@@ -88,11 +88,13 @@ int main(int argc, char *argv[]) {
 
   Data adaboost_data = ckdata.get_flat_data();
   Adaboost adaboost = Adaboost(adaboost_data.x, adaboost_data.t, weak_learners, false);
+  adaboost.save_features("res/features.txt");
   Mat reduced_train_x = adaboost.reduce_features(train.x);
 
   // init svm
   SVMOneVsAll svm(C);
   svm.train(reduced_train_x, train.t);
+  svm.save();
 
   ConfusionMatrix confusion_matrix;
 

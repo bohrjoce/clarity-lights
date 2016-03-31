@@ -20,6 +20,10 @@ JAFFEValidation: JAFFEValidation.cc preprocess.cc CKTrainData.cc adaboost.cc SVM
 preprocess.o: preprocess.cc preprocess.h
 	$(CC) $(CFLAGS) preprocess.cc -c $(LIBS)
 
+TakePhoto: take_photo.cc adaboost.cc SVMOneVsAll.cc
+	$(CC) $(CFLAGS) take_photo.cc adaboost.cc SVMOneVsAll.cc -std=c++11 -o $@ $(LIBS)
+
+
 filesystem: filesystem.cc CKTrainData.cc
 	$(CC) filesystem.cc CKTrainData.cc -std=c++11 -o $@ $(BOOST_LIBS)
 
