@@ -1,7 +1,9 @@
 #ifndef ARDUINO_H
 #define ARDUINO_H
 
-#include <cstdio>
+#include <cstddef>
+
+const unsigned int ONE_SECOND = 1000000;
 
 class Color {
 public:

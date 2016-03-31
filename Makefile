@@ -20,9 +20,6 @@ JAFFEValidation: JAFFEValidation.cc preprocess.cc CKTrainData.cc adaboost.cc SVM
 preprocess.o: preprocess.cc preprocess.h
 	$(CC) $(CFLAGS) preprocess.cc -c $(LIBS)
 
-test: test.cc preprocess.o
-	$(CC) $(CFLAGS) test.cc preprocess.o -o $@ $(LIBS)
-
 filesystem: filesystem.cc CKTrainData.cc
 	$(CC) filesystem.cc CKTrainData.cc -std=c++11 -o $@ $(BOOST_LIBS)
 
@@ -30,4 +27,4 @@ arduino: arduino.cc
 	$(CC) arduino.cc -std=c++11 -o $@ $(CFLAGS)
 
 clean:
-	rm -rf *.o svm test arduino LOOCValidation KDEFValidation JAFFEValidation
+	rm -rf *.o svm arduino LOOCValidation KDEFValidation JAFFEValidation

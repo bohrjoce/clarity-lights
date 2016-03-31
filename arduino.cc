@@ -1,16 +1,11 @@
 #include "arduino.h"
 #include <iostream>
-#include <string>
-#include <cstdlib>
 #include <vector>
+#include <cstring>
 #include <unistd.h>
-#include <stdio.h>
-#include <string.h>
 #include <fcntl.h>
-#include <errno.h>
 #include <termios.h>
-#include <stdint.h>
-#include <time.h>
+#include <stdio.h>
 
 using namespace std;
 
@@ -26,14 +21,7 @@ Color::Color(unsigned int r_, unsigned int g_, unsigned int b_) {
 
 // Send bytes to Arduino; returns success
 bool Arduino::send_bytes(int fd, unsigned char bytes[], size_t nbytes) {
-    // if (write(fd, &bytes, 1) == 1) {
-    //     printf("Successful write.\n");
-    //     return true;
-    // } else {
-    //     printf("Unsuccessful write.\n");
-    //     return false;
-    // }
-    uint bytes_written, spot = 0;
+    unsigned int bytes_written, spot = 0;
     do {
         bytes_written = write(fd, &bytes[spot], nbytes - spot);
         spot += bytes_written;
@@ -49,14 +37,7 @@ bool Arduino::send_bytes(int fd, unsigned char bytes[], size_t nbytes) {
 
 // Read nbytes from Arduino; returns success
 bool Arduino::read_bytes(int fd, unsigned char bytes[], size_t nbytes) {
-    // unsigned char byte = '\0';
-    // if (read(fd, &byte, 1) == 1) {
-    //     printf("Successful read.\n");
-    // } else {
-    //     printf("Unsuccessful read.\n");
-    // }
-    // return byte;
-    uint bytes_read, spot = 0;
+    unsigned int bytes_read, spot = 0;
     do {
         bytes_read = read(fd, &bytes[spot], nbytes - spot);
         spot += bytes_read;
@@ -70,7 +51,7 @@ bool Arduino::read_bytes(int fd, unsigned char bytes[], size_t nbytes) {
     }
 }
 
-// Initialize and verify whether a device is our Arduino
+// Initialize and verify whether a device is the Arduino
 // On success, returns true and sets fd; otherwise returns false
 bool Arduino::verify(const char* device, int &fd) {
     // Initialize file descriptor
@@ -79,41 +60,45 @@ bool Arduino::verify(const char* device, int &fd) {
         printf("Unable to open %s.\n", device);
         return false;
     }
+
     // Construct port settings
     struct termios port_settings;
     if (tcgetattr(fd, &port_settings) != 0 ) {
         printf("Error configuring port settings.\n");
         return false;
     }
+
     // Baud rates
     cfsetispeed(&port_settings, B9600);
     cfsetospeed(&port_settings, B9600);
-    // Set settings
+
+    // Port settings
     port_settings.c_cflag &= ~PARENB;
     port_settings.c_cflag &= ~CSTOPB;
     port_settings.c_cflag &= ~CSIZE;
     port_settings.c_cflag |= CS8;
     port_settings.c_cc[VMIN] = 1;
-    port_settings.c_cc[VTIME] = 5;
+    port_settings.c_cc[VTIME] = 10;
     port_settings.c_cflag |= CREAD | CLOCAL;
     cfmakeraw(&port_settings);
+
     // Flush port and apply the settings to the port
-    tcflush(fd, TCIFLUSH);
+    tcflush(fd, TCIOFLUSH);
     if (tcsetattr(fd, TCSANOW, &port_settings) != 0) {
         printf("Error applying port settings.\n");
         return false;
     }
 
-    // Verify device as correct Arduino
+    // Verify device as the Arduino
     unsigned char rand_bytes[3] = {
         (unsigned char)rand(),
         (unsigned char)rand(),
         (unsigned char)rand()
     };
     unsigned char response[3] = {'\0', '\0', '\0'};
-    usleep(2000000);
+    usleep(2*ONE_SECOND);
     if (!send_bytes(fd, rand_bytes, 3)) return false;
-    usleep(2000000);
+    usleep(2*ONE_SECOND);
     if (!read_bytes(fd, response, 3)) return false;
     for (unsigned int i = 0; i < 3; i++) {
         if (rand_bytes[i] != response[i]) return false;
@@ -121,18 +106,31 @@ bool Arduino::verify(const char* device, int &fd) {
     return true;
 }
 
-// Default constructor
-Arduino::Arduino() : device_verified(false){ };
+// Arduino constructor
+Arduino::Arduino() : device_verified(false) {};
 
-// Initialize Arduino class
+// Initialize Arduino class; find location of the Arduino and set file descriptor
+// Returns true if successful
 bool Arduino::init() {
-    // Construct list of candidate devices; Todo
+    // Construct list of candidate devices
     vector<string> devices;
-    devices.push_back("/dev/ttyACM2");
-    devices.push_back("/dev/ttyACM1");
-    devices.push_back("/dev/ttyACM0");
+    FILE * f = popen("ls /dev/tty*", "r");
+    const int BUFSIZE = 1000;
+    char buf[BUFSIZE];
+    char acm[] = "ACM", usb[] = "USB";
+    if (f == 0) {
+        printf("Could not execute linux command.\n");
+        return false;
+    }
+    while(fgets(buf, BUFSIZE, f)) {
+        if(strstr(buf, acm) != NULL || strstr(buf, usb) != NULL) {
+            buf[strcspn(buf, "\r\n")] = 0;
+            devices.push_back(buf);
+        }
+    }
+    pclose(f);
 
-    // Verify and set file descriptor
+    // Verify device and set file descriptor
     for (unsigned int i = 0; i < devices.size(); i++) {
         printf("Attempting to verify device %s.\n", devices[i].c_str());
         if (verify(devices[i].c_str(), arduino)) {
@@ -146,34 +144,50 @@ bool Arduino::init() {
     return false;
 }
 
-// Set emotion on Arduino
+// Send desired light strip color to Arduino
 bool Arduino::set_color(Color color) {
     // Check that device is verified
     if (!device_verified) {
         printf("Device has not yet been verified.\n");
         return false;
     }
+
+    // Flush data
+    tcflush(arduino, TCIOFLUSH);
+
     // Send color and check response
     unsigned char rgb[3] = {color.r, color.g, color.b};
     unsigned char response[3] = {'\0', '\0', '\0'};
     if (!send_bytes(arduino, rgb, 3)) return false;
-    usleep(1000000);
+    usleep(ONE_SECOND);
     if (!read_bytes(arduino, response, 3)) return false;
+    cout << "Sent\tReceived\t" << endl;
     for (unsigned int i = 0; i < 3; i++) {
+        cout << rgb[i] << "\t" << response[i] << endl;
         if (rgb[i] != response[i]) return false;
     }
     return true;
 }
 
 int main() {
-    
+
+    // Example of use
     Arduino arduino;
+    int r, g, b;
     if (arduino.init()) {
         printf("Arduino found.\n");
-        if (arduino.set_color(Color(1, 2, 3))) {
-            printf("Color set successfully.\n");
-        } else {
-            printf("Setting color failed.\n");
+        while (1) {
+            printf("r = ");
+            cin >> r;
+            printf("g = ");
+            cin >> g;
+            printf("b = ");
+            cin >> b;
+            if (arduino.set_color(Color(r, g, b))) {
+                printf("Color set successfully.\n");
+            } else {
+                printf("Setting color failed.\n");
+            }
         }
     } else {
         printf("Arduino not found.\n");

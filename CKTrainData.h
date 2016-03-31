@@ -34,6 +34,7 @@ class CKTrainData {
     vector< vector< vector< string >>> filenames;
     vector< vector< int >> labels;
     vector<Data> people_data;
+    vector< vector < string >> filename_data;
     void iterate_ck_images();
     void iterate_ck_labels();
     void check_files();
@@ -45,6 +46,7 @@ class CKTrainData {
     void print_labels();
     string get_filename(int speaker, int sequence, int image);
     unsigned int get_num_people();
+    vector<vector<string>> get_filename_data();
     Data get_flat_data();
 };
 

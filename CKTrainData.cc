@@ -7,10 +7,12 @@ CKTrainData::CKTrainData(bool use_gabor, float gabor_stddev, double spacial_aspe
 
   Mat m, gabor_features;
   Data current_person(Mat(0,0,CV_32F), Mat(0,0,CV_32SC1));
+  vector<string> current_person_filenames;
 
   for (unsigned int i = 0; i < filenames.size() ; ++i) {
     current_person.x.release();
     current_person.t.release();
+    current_person_filenames.clear();
 
     for (unsigned int j = 0; j < filenames[i].size(); ++j) {
 
@@ -33,6 +35,7 @@ CKTrainData::CKTrainData(bool use_gabor, float gabor_stddev, double spacial_aspe
       // first frame in sequence. label = neutral = 2. 2 was old contempt label
       current_person.x.push_back(gabor_features);
       current_person.t.push_back(Mat(1, 1, CV_32SC1, 2));
+      current_person_filenames.push_back(filenames[i][j][0]);
 
       unsigned int end = filenames[i][j].size();
       if (preprocess(filenames[i][j][end-1], m) != 0) {
@@ -51,8 +54,10 @@ CKTrainData::CKTrainData(bool use_gabor, float gabor_stddev, double spacial_aspe
       // last frame in sequence. label = labels[i][j]
       current_person.x.push_back(gabor_features);
       current_person.t.push_back(Mat(1, 1, CV_32SC1, labels[i][j]));
+      current_person_filenames.push_back(filenames[i][j][end-1]);
     }
     people_data.push_back(current_person);
+    filename_data.push_back(current_person_filenames);
   }
 }
 
@@ -206,6 +211,10 @@ void CKTrainData::partition_LOO_data(Data &train, Data &test, unsigned int perso
 
 unsigned int CKTrainData::get_num_people() {
   return people_data.size();
+}
+
+vector<vector<string>> CKTrainData::get_filename_data() {
+  return filename_data;
 }
 
 Data CKTrainData::get_flat_data() {
