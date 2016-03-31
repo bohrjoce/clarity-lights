@@ -187,8 +187,25 @@ void CKTrainData::check_files() {
   }
 }
 
-vector<Data> CKTrainData::get_people_data() {
-  return people_data;
+void CKTrainData::partition_LOO_data(Data &train, Data &test, unsigned int person) {
+  train.x.release();
+  train.t.release();
+  test.x.release();
+  test.t.release();
+
+  for (unsigned int i = 0; i < people_data.size(); ++i) {
+    if (i == person) {
+      test.x.push_back(people_data[i].x);
+      test.t.push_back(people_data[i].t);
+    } else {
+      train.x.push_back(people_data[i].x);
+      train.t.push_back(people_data[i].t);
+    }
+  }
+}
+
+unsigned int CKTrainData::get_num_people() {
+  return people_data.size();
 }
 
 Data CKTrainData::get_flat_data() {

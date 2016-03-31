@@ -8,14 +8,14 @@ CFLAGS = -g -Wall -Werror -std=c++11 $(OPENCV_FLAGS)
 
 default: LOOCValidation KDEFValidation JAFFEValidation
 
-LOOCValidation: LOOCValidation.cc preprocess.cc CKTrainData.cc adaboost.cc
-	$(CC) $(CFLAGS) LOOCValidation.cc preprocess.cc CKTrainData.cc gabor_filter.cc gabor_impl.cc adaboost.cc -std=c++11 -o $@ $(LIBS)
+LOOCValidation: LOOCValidation.cc preprocess.cc CKTrainData.cc adaboost.cc SVMOneVsAll.cc ConfusionMatrix.cc
+	$(CC) $(CFLAGS) LOOCValidation.cc preprocess.cc CKTrainData.cc gabor_filter.cc gabor_impl.cc adaboost.cc SVMOneVsAll.cc ConfusionMatrix.cc -std=c++11 -o $@ $(LIBS)
 
-KDEFValidation: KDEFValidation.cc preprocess.cc CKTrainData.cc adaboost.cc
-	$(CC) $(CFLAGS) KDEFValidation.cc preprocess.cc CKTrainData.cc gabor_filter.cc gabor_impl.cc adaboost.cc -std=c++11 -o $@ $(LIBS)
+KDEFValidation: KDEFValidation.cc preprocess.cc CKTrainData.cc adaboost.cc SVMOneVsAll.cc ConfusionMatrix.cc
+	$(CC) $(CFLAGS) KDEFValidation.cc preprocess.cc CKTrainData.cc gabor_filter.cc gabor_impl.cc adaboost.cc SVMOneVsAll.cc ConfusionMatrix.cc -std=c++11 -o $@ $(LIBS)
 
-JAFFEValidation: JAFFEValidation.cc preprocess.cc CKTrainData.cc adaboost.cc
-	$(CC) $(CFLAGS) JAFFEValidation.cc preprocess.cc CKTrainData.cc gabor_filter.cc gabor_impl.cc adaboost.cc -std=c++11 -o $@ $(LIBS)
+JAFFEValidation: JAFFEValidation.cc preprocess.cc CKTrainData.cc adaboost.cc SVMOneVsAll.cc ConfusionMatrix.cc
+	$(CC) $(CFLAGS) JAFFEValidation.cc preprocess.cc CKTrainData.cc gabor_filter.cc gabor_impl.cc adaboost.cc SVMOneVsAll.cc ConfusionMatrix.cc -std=c++11 -o $@ $(LIBS)
 
 preprocess.o: preprocess.cc preprocess.h
 	$(CC) $(CFLAGS) preprocess.cc -c $(LIBS)

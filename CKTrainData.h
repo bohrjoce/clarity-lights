@@ -41,9 +41,10 @@ class CKTrainData {
   public:
     CKTrainData(bool use_gabor = true, float gabor_stddev = 2.0, double spacial_aspect = 2.0);
     void print_filenames();
+    void partition_LOO_data(Data &train, Data &test, unsigned int person);
     void print_labels();
     string get_filename(int speaker, int sequence, int image);
-    vector<Data> get_people_data();
+    unsigned int get_num_people();
     Data get_flat_data();
 };
 

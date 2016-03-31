@@ -3,6 +3,8 @@
 
 #include <string>
 #include <vector>
+#include "ConfusionMatrix.h"
+#include "SVMOneVsAll.h"
 
 const std::string jaffeDir = "jaffeimages/jaffe/";
 
