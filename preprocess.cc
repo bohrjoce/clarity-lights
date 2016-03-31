@@ -23,8 +23,8 @@ int preprocess(string imagePath, Mat &output) {
     // Read in image
     image = imread(imagePath, 1);
     if (!image.data) {
-        printf("Error: image not found\n");
-        exit(1);
+        printf("Image not found\n");
+        return -1;
     }
 
     // Convert to grayscale
