@@ -12,6 +12,7 @@
 #include "adaboost.h"
 #include "ConfusionMatrix.h"
 #include "SVMOneVsAll.h"
+#include "data.h"
 
 //emotion mapping:
 //  0-7 (i.e.
@@ -34,9 +35,11 @@ struct Sample{
 
 
 struct KDEFValidation {
+  std::vector<Data> people_data;
   std::vector<Sample> samples;
   KDEFValidation();
   void print_samples();
+  std::vector<Data> get_people_data() { return people_data; }
 };
 
 #endif

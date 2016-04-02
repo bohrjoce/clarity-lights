@@ -20,13 +20,31 @@ JaffeImages::JaffeImages() {
     path p(jaffeDir);
     string filename, emotion;
     int e;
+    Mat m;
+    Data current_person(Mat(0,0,CV_32F), Mat(0,0,CV_32SC1));
+    string current_name = "KA";
+    string new_name = "KA";
+    current_person.x.release();
+    current_person.t.release();
     if (exists(p) && is_directory(p)) {
-        directory_iterator it(p), eod;
-        BOOST_FOREACH(path const &file, make_pair(it, eod)) {
+        directory_iterator it0(p), eod0;
+        vector<path> v0;
+        copy(it0, eod0, back_inserter(v0));
+        sort(v0.begin(), v0.end());
+
+        for (auto it = v0.begin(); it != v0.end(); ++it) {
+            path file = *it;
             if(is_regular_file(file) && file.extension() == ".tiff") {
                 filename = file.filename().string();
                 filenames.push_back(filename);
                 emotion = filename.substr(filename.find(".") + 1, 2);
+                string new_name = filename.substr(0, 2);
+                if (new_name != current_name) {
+                  current_name = new_name;
+                  people_data.push_back(current_person);
+                  current_person.x.release();
+                  current_person.t.release();
+                }
                 if (emotion == "HA") {
                     e = 5;
                 } else if (emotion == "SA") {
@@ -46,14 +64,24 @@ JaffeImages::JaffeImages() {
                     exit(1);
                 }
                 labels.push_back(e);
+                string file_path = file.string();
+                // construct current_person
+                if (preprocess(file_path, m) != 0) {
+                    cout << "preprocess failed: " << file_path << endl;
+                    exit(1);
+                }
+                Mat gabor_features = ImageToFV(m);
+                current_person.x.push_back(gabor_features);
+                current_person.t.push_back(Mat(1, 1, CV_32SC1, e));
             }
         }
+        people_data.push_back(current_person);
     } else {
         cerr << "JAFFE directory missing." << endl;
         exit(1);
     }
 }
-
+/*
 int main(int argc, char *argv[]) {
     JaffeImages jaffeImages;
 
@@ -98,4 +126,4 @@ int main(int argc, char *argv[]) {
     confusion_matrix.print();
 
     return 0;
-}
+}*/

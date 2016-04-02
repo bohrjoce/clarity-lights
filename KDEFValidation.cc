@@ -18,7 +18,13 @@ KDEFValidation::KDEFValidation() {
   vector<fs::path> v0;
   copy(it0, eod0, back_inserter(v0));
   sort(v0.begin(), v0.end());
+
+  Data current_person(Mat(0,0,CV_32F), Mat(0,0,CV_32SC1));
+  Mat m;
+
   for (auto sequence_it = v0.begin(); sequence_it != v0.end(); ++sequence_it) {
+    current_person.x.release();
+    current_person.t.release();
     if (fs::is_regular_file(*sequence_it)) continue;
     fs::directory_iterator it1(*sequence_it), eod1;
     vector<fs::path> v1;
@@ -60,7 +66,16 @@ KDEFValidation::KDEFValidation() {
         assert(1);
       }
       samples.push_back(newSample);
+      // construct current_person
+      if (preprocess(newSample.filepath, m) != 0) {
+          cout << "preprocess failed: " << newSample.filepath << endl;
+          exit(1);
+      }
+      Mat gabor_features = ImageToFV(m);
+      current_person.x.push_back(gabor_features);
+      current_person.t.push_back(Mat(1, 1, CV_32SC1, newSample.emotion));
     }
+    people_data.push_back(current_person);
   }
 }
 
@@ -72,7 +87,7 @@ void KDEFValidation::print_samples(){
   }
   cout << endl;
 }
-
+/*
 int main(int argc, char *argv[]) {
   KDEFValidation kd;
   float stddev = 2.0;
@@ -88,11 +103,13 @@ int main(int argc, char *argv[]) {
 
   Data adaboost_data = ckdata.get_flat_data();
   Adaboost adaboost = Adaboost(adaboost_data.x, adaboost_data.t, weak_learners, false);
+  adaboost.save_features("res/features.txt");
   Mat reduced_train_x = adaboost.reduce_features(train.x);
 
   // init svm
   SVMOneVsAll svm(C);
   svm.train(reduced_train_x, train.t);
+  svm.save();
 
   ConfusionMatrix confusion_matrix;
 
@@ -107,14 +124,23 @@ int main(int argc, char *argv[]) {
       cout << "preprocess failed: " << kd.samples[i].filepath << endl;
       exit(1);
     }
-    test_x = ImageToFV(image, stddev);
+    test_x = ImageToFV(image);
     reduced_test_x = adaboost.reduce_features(test_x);
     int response = svm.predict(reduced_test_x);
     int truth = kd.samples[i].emotion;
+    if (response != truth) {
+      // Do something with filename if incorrectly classified
+      // cout << test_filenames[i] << endl;
+      Mat m;
+      Mat gabor_features = ImageToFV(image,2.0,31,2.0,true);
+      //namedWindow("Misclassified Image", WINDOW_AUTOSIZE);
+      //imshow("Misclassified Image", image);
+      //waitKey(0);
+    }
 //    cout << response << " vs " << truth << endl;
     confusion_matrix.update(response, truth);
   }
   confusion_matrix.print();
 
   return 0;
-}
+}*/

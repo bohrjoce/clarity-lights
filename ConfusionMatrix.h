@@ -15,7 +15,9 @@ class ConfusionMatrix {
 
   public:
     ConfusionMatrix();
+    // increments confusion matrix values when a new prediction is made
     void update(int response, int truth);
+    // prints statistics (accuracy, UAR, confusion matrix, class recalls)
     void print();
 };
 
