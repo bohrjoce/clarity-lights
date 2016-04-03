@@ -11,7 +11,7 @@ APA102<dataPin, clockPin> ledStrip;
 const uint16_t ledCount = 240;
 rgb_color new_colors;
 rgb_color written_colors[ledCount];
-const uint8_t brightness = 1;
+const uint8_t brightness = 15;
 
 // Serial communication buffer
 const int numBytes = 3;

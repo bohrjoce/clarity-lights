@@ -161,9 +161,7 @@ bool Arduino::set_color(Color color) {
     if (!send_bytes(arduino, rgb, 3)) return false;
     usleep(ONE_SECOND);
     if (!read_bytes(arduino, response, 3)) return false;
-    cout << "Sent\tReceived\t" << endl;
     for (unsigned int i = 0; i < 3; i++) {
-        cout << rgb[i] << "\t" << response[i] << endl;
         if (rgb[i] != response[i]) return false;
     }
     return true;
