@@ -46,6 +46,7 @@ class CKTrainData {
     void print_labels();
     string get_filename(int speaker, int sequence, int image);
     unsigned int get_num_people();
+    std::vector<Data> get_people_data();
     vector<vector<string>> get_filename_data();
     Data get_flat_data();
 };

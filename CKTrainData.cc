@@ -213,6 +213,10 @@ unsigned int CKTrainData::get_num_people() {
   return people_data.size();
 }
 
+vector<Data> CKTrainData::get_people_data() {
+  return people_data;
+}
+
 vector<vector<string>> CKTrainData::get_filename_data() {
   return filename_data;
 }

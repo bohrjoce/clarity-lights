@@ -6,7 +6,10 @@ LIBS = $(BOOST_LIBS) $(OPENCV_LIBS) -lm -ldl
 OPENCV_FLAGS = -I/usr/local/include/opencv -I/usr/local/include
 CFLAGS = -g -Wall -Werror -std=c++11 $(OPENCV_FLAGS)
 
-default: LOOCValidation KDEFValidation JAFFEValidation
+default: LOOCValidation AllValidation take_photo
+
+AllValidation: AllValidation.cc KDEFValidation.cc JAFFEValidation.cc preprocess.cc CKTrainData.cc adaboost.cc SVMOneVsAll.cc ConfusionMatrix.cc
+	$(CC) $(CFLAGS) AllValidation.cc KDEFValidation.cc JAFFEValidation.cc preprocess.cc CKTrainData.cc gabor_filter.cc gabor_impl.cc adaboost.cc SVMOneVsAll.cc ConfusionMatrix.cc -std=c++11 -o $@ $(LIBS)
 
 LOOCValidation: LOOCValidation.cc preprocess.cc CKTrainData.cc adaboost.cc SVMOneVsAll.cc ConfusionMatrix.cc
 	$(CC) $(CFLAGS) LOOCValidation.cc preprocess.cc CKTrainData.cc gabor_filter.cc gabor_impl.cc adaboost.cc SVMOneVsAll.cc ConfusionMatrix.cc -std=c++11 -o $@ $(LIBS)
@@ -19,10 +22,6 @@ JAFFEValidation: JAFFEValidation.cc preprocess.cc CKTrainData.cc adaboost.cc SVM
 
 preprocess.o: preprocess.cc preprocess.h
 	$(CC) $(CFLAGS) preprocess.cc -c $(LIBS)
-
-TakePhoto: take_photo.cc adaboost.cc SVMOneVsAll.cc
-	$(CC) $(CFLAGS) take_photo.cc adaboost.cc SVMOneVsAll.cc -std=c++11 -o $@ $(LIBS)
-
 
 filesystem: filesystem.cc CKTrainData.cc
 	$(CC) filesystem.cc CKTrainData.cc -std=c++11 -o $@ $(BOOST_LIBS)
