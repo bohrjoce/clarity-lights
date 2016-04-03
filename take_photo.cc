@@ -52,7 +52,7 @@ int main() {
     // Load trained SVM model
     SVMOneVsAll svm;
     svm.load();
-    Adaboost adaboost("res/features.txt");
+    Adaboost adaboost("trained_models/features.txt");
 
     // Set up Arduino
     // Arduino arduino;
@@ -80,7 +80,7 @@ int main() {
         //     cout << "Setting color failed" << endl;
         // }
         // Delete picture
-        system(("rm " + webcam_pic_path).c_str());
+//        system(("rm " + webcam_pic_path).c_str());
     } while (!sleep(interval));
 
     return 0;

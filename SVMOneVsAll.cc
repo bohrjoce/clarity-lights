@@ -53,7 +53,7 @@ vector<double> SVMOneVsAll::raw_predict(Mat test_x) {
 }
 
 void SVMOneVsAll::save() {
-  string savedir = "res/svm";
+  string savedir = "trained_models/svm";
   for (unsigned int i = 0; i < svm.size(); ++i) {
     string savefile = savedir + to_string(i) + ".xml";
     svm[i]->save(savefile);
@@ -61,7 +61,7 @@ void SVMOneVsAll::save() {
 }
 
 void SVMOneVsAll::load() {
-  string loaddir = "res/svm";
+  string loaddir = "trained_models/svm";
   for (unsigned int i = 0; i < svm.size(); ++i) {
     string loadfile = loaddir + to_string(i) + ".xml";
     svm[i] = StatModel::load<SVM>(loadfile);
