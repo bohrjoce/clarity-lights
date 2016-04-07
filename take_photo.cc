@@ -4,11 +4,14 @@
 #include <string>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
 #include <opencv2/opencv.hpp>
 #include "preprocess.h"
 #include "gabor_filter.h"
 #include "SVMOneVsAll.h"
 #include "arduino.h"
+
+//#define TESTING
 
 using namespace std;
 
@@ -30,28 +33,35 @@ int main() {
       cout << "\nGoodbye.\n";
       exit(0);
     }
+
+#ifdef TESTING
+    string name;
+    cout << "\n\nType your name here: ";
+    cin >> name;
+#endif
+
     vector<Color> colors;
     colors.push_back(Color(255, 0, 0));     // anger
-    colors.push_back(Color(100, 100, 100)); // neutral
-    colors.push_back(Color(0, 225, 0));     // disgust
-    colors.push_back(Color(200, 0, 245));   // fear
+    colors.push_back(Color(255, 255, 255)); // neutral
+    colors.push_back(Color(100, 255, 0));     // disgust
+    colors.push_back(Color(0, 255, 150));   // fear
     colors.push_back(Color(255, 255, 0));   // happy
-    colors.push_back(Color(0, 190, 255));   // sadness
-    colors.push_back(Color(255, 185, 20));  // surprise
+    colors.push_back(Color(0, 0, 255));   // sadness
+    colors.push_back(Color(255, 0, 255));  // surprise
 
     cout << "\n\n\nDefault color mapping\n\n\n";
-    cout << "Emotion      R    G    B\n";
-    cout << "------------------------\n";
-    cout << "Anger:     255    0    0\n";
-    cout << "Neutral:   100  100  100\n";
-    cout << "Disgust:     0  225    0\n";
-    cout << "Fear:      200    0  245\n";
-    cout << "Happy:     255  255    0\n";
-    cout << "Sadness:     0  190  255\n";
-    cout << "Surprise:  255  185   20\n\n\n";
-    cout << "Do you want to change the default color mapping? [y/n]: ";
+    cout << "Emotion      R    G    B          color\n";
+    cout << "---------------------------------------\n";
+    cout << "Anger:     255    0    0            red\n";
+    cout << "Neutral:   255  255  255          white\n";
+    cout << "Disgust:   100  255    0   yellow-green\n";
+    cout << "Fear:        0  255  150           teal\n";
+    cout << "Happy:     255  255    0         yellow\n";
+    cout << "Sadness:     0    0  255           blue\n";
+    cout << "Surprise:  255    0  255        magenta\n\n\n";
+    cout << "Is the default color mapping acceptable? [y/n]: ";
     cin >> response;
-    if (response == 'y') {
+    if (response == 'n') {
       colors.clear();
       unsigned int r, g, b;
       cout << "\n\nRGB values for:" << endl;
@@ -84,8 +94,11 @@ int main() {
       cout << r << " " << g << " " << b << endl;
       colors.push_back(Color(r, g, b));
     }
+    response = 'n';
+#ifndef TESTING
     cout << "\n\nRun in demo mode (take pictures with keypress)? [y/n]: ";
     cin >> response;
+#endif
     bool demo = false;
     if (response == 'y') {
       demo = true;
@@ -94,11 +107,10 @@ int main() {
       cin >> response;
       if (response == 'y') {
         interval = 0;
-        while (interval < 1 or interval > 60) {
-          cout << "Capture interval (minutes, between 1-60): ";
+        while (interval < 5 or interval > 1200) {
+          cout << "Capture interval (minutes, between 5-1200): ";
           cin >> interval;
         }
-        interval *= 60;
       }
     }
 
@@ -109,11 +121,16 @@ int main() {
     Adaboost adaboost("trained_models/all-features.txt");
 
     // Set up Arduino
-    Arduino arduino;
+/*    Arduino arduino;
     if (!arduino.init()) {
         cout << "Arduino not found" << endl;
         exit(1);
-    }
+    }*/
+#ifdef TESTING
+    ofstream emotionlog;
+    string emotionlog_filename = "log/" + name + "-emotion.log";
+    emotionlog.open(emotionlog_filename.c_str());
+#endif
 
     do {
         if (demo) {
@@ -122,7 +139,7 @@ int main() {
           sleep(interval);
         }
         // Take picture
-        system(("streamer -f jpeg -o " + webcam_pic_path + " > clarity_lights.log 2>&1").c_str());
+        system(("streamer -f jpeg -o " + webcam_pic_path + " > log/clarity_lights.log 2>&1").c_str());
         // Feature extraction
         Mat webcam_pic;
         if (preprocess(webcam_pic_path, webcam_pic) != 0) {
@@ -130,14 +147,26 @@ int main() {
           continue;
         }
         // Classify emotion
+//        Mat gabor_features = ImageToFV(webcam_pic, 2.0, 31, 2.0, true, &(adaboost.weak_learners_indices));
         Mat gabor_features = ImageToFV(webcam_pic);
         Mat reduced_features = adaboost.reduce_features(gabor_features);
         int response = svm.predict(reduced_features);
-        cout << emotion_labels[response-1] << endl;
         // Set color
-        if (!arduino.set_color(colors[response-1])) {
+/*        if (!arduino.set_color(colors[response-1])) {
             cout << "Setting color failed" << endl;
-        }
+        }*/
+#ifdef TESTING
+        time_t rawtime;
+        struct tm * timeinfo;
+        time(&rawtime);
+        timeinfo = localtime(&rawtime);
+        string time_str(asctime(timeinfo));
+        time_str = time_str.substr(11, 8);
+        emotionlog << time_str << "  " << emotion_labels[response-1] << endl;
+#endif
+#ifndef TESTING
+        cout << emotion_labels[response-1] << endl;
+#endif
     } while (true);
 
     return 0;
