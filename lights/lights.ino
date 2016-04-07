@@ -62,7 +62,7 @@ void loop()
     }
     
     ledStrip.write(written_colors, ledCount, brightness);
-    delay(100);
+    delay(50);
   }
 }
 
