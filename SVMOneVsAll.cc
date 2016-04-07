@@ -45,10 +45,10 @@ int SVMOneVsAll::predict(Mat test_x) {
 }
 
 Mat SVMOneVsAll::create_svm_features(Mat test_x) {
-  Mat svm_features = Mat(test_x.rows, NUM_EMOTIONS, CV_64F);
+  Mat svm_features = Mat(test_x.rows, NUM_EMOTIONS, CV_32F);
   for (int i = 0; i < test_x.rows; ++i) {
     for (unsigned int j = 0; j < NUM_EMOTIONS; ++j) {
-      svm_features.at<double>(i,j) 
+      svm_features.at<float>(i,j) 
         = svm[j]->predict(test_x.row(i), noArray(), StatModel::RAW_OUTPUT);
     }
   }
