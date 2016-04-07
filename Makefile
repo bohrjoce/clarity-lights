@@ -8,8 +8,8 @@ CFLAGS = -g -Wall -Werror -std=c++11 $(OPENCV_FLAGS)
 
 default: LOOCValidation AllValidation take_photo
 
-AllValidation: AllValidation.cc KDEFValidation.cc JAFFEValidation.cc preprocess.cc CKTrainData.cc adaboost.cc SVMOneVsAll.cc ConfusionMatrix.cc
-	$(CC) $(CFLAGS) AllValidation.cc KDEFValidation.cc JAFFEValidation.cc preprocess.cc CKTrainData.cc gabor_filter.cc gabor_impl.cc adaboost.cc SVMOneVsAll.cc ConfusionMatrix.cc -std=c++11 -o $@ $(LIBS)
+AllValidation: AllValidation.cc Trees.cc KDEFValidation.cc JAFFEValidation.cc preprocess.cc CKTrainData.cc adaboost.cc SVMOneVsAll.cc ConfusionMatrix.cc
+	$(CC) $(CFLAGS) AllValidation.cc KDEFValidation.cc JAFFEValidation.cc preprocess.cc CKTrainData.cc gabor_filter.cc gabor_impl.cc adaboost.cc SVMOneVsAll.cc Trees.cc ConfusionMatrix.cc -std=c++11 -o $@ $(LIBS)
 
 LOOCValidation: LOOCValidation.cc preprocess.cc CKTrainData.cc adaboost.cc SVMOneVsAll.cc ConfusionMatrix.cc
 	$(CC) $(CFLAGS) LOOCValidation.cc preprocess.cc CKTrainData.cc gabor_filter.cc gabor_impl.cc adaboost.cc SVMOneVsAll.cc ConfusionMatrix.cc -std=c++11 -o $@ $(LIBS)

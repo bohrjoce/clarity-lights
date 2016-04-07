@@ -10,7 +10,7 @@
 #include "ConfusionMatrix.h"
 #include "JAFFEValidation.h"
 #include "KDEFValidation.h"
-
+#include "Trees.h"
 using namespace cv;
 using namespace ml;
 using namespace std;
@@ -44,11 +44,11 @@ int main(int argc, char *argv[]) {
 
   SVMOneVsAll svm(C); // init svm
 
-  ConfusionMatrix confusion_matrix;
-  ConfusionMatrix ck_confusion_matrix;
-  ConfusionMatrix jaffe_confusion_matrix;
-  ConfusionMatrix kdef_confusion_matrix;
-
+  ConfusionMatrix confusion_matrix[2];
+  ConfusionMatrix ck_confusion_matrix[2];
+  ConfusionMatrix jaffe_confusion_matrix[2];
+  ConfusionMatrix kdef_confusion_matrix[2];
+  
   Data train(Mat(0, 0, CV_32F), Mat(0, 0, CV_32SC1));
   Data test(Mat(0, 0, CV_32F), Mat(0, 0, CV_32SC1));
 
@@ -86,22 +86,34 @@ int main(int argc, char *argv[]) {
 
     svm.train(reduced_train_x, train.t);
 
-    Mat svm_features = svm.create_svm_features(reduced_train_x);
+    Mat svm_features_train = svm.create_svm_features(reduced_train_x);
+    Mat svm_features_test = svm.create_svm_features(reduced_test_x);
 
 
+
+    //train our tree on output of svm
+    Trees tree;
+    tree.train(svm_features_train, train.t);
 
 
 
     for (int i = 0; i < reduced_test_x.rows; ++i) {
       int response = svm.predict(reduced_test_x.row(i));
+      int treeResponse = tree.predict(svm_features_test.row(i)); 
       int truth = test.t.at<int>(i);
-      confusion_matrix.update(response, truth);
+      confusion_matrix[0].update(response, truth);
+      confusion_matrix[1].update(treeResponse, truth);
+
       if (person < jaffe_start) {
-        ck_confusion_matrix.update(response, truth);
+        ck_confusion_matrix[0].update(response, truth);
+        ck_confusion_matrix[1].update(treeResponse, truth);
+
       } else if (person < kdef_start) {
-        jaffe_confusion_matrix.update(response, truth);
+        jaffe_confusion_matrix[0].update(response, truth);
+        jaffe_confusion_matrix[1].update(treeResponse, truth);
       } else {
-        kdef_confusion_matrix.update(response, truth);
+        kdef_confusion_matrix[0].update(response, truth);
+        kdef_confusion_matrix[1].update(treeResponse, truth);
       }
       if (response != truth) {
         // Do something with filename if incorrectly classified
@@ -120,12 +132,23 @@ int main(int argc, char *argv[]) {
     }
   }
   cout << "--------CK STATISTICS--------\n";
-  ck_confusion_matrix.print();
+  ck_confusion_matrix[0].print();
   cout << "--------JAFFE STATISTICS--------\n";
-  jaffe_confusion_matrix.print();
+  jaffe_confusion_matrix[0].print();
   cout << "--------KDEF STATISTICS--------\n";
-  kdef_confusion_matrix.print();
+  kdef_confusion_matrix[0].print();
   cout << "--------ALL STATISTICS--------\n";
-  confusion_matrix.print();
+  confusion_matrix[0].print();
+  cout << "\n\n\n";
+  cout << "--------DECISION TREES--------\n"; 
+  cout << "--------CK STATISTICS--------\n";
+  ck_confusion_matrix[1].print();
+  cout << "--------JAFFE STATISTICS--------\n";
+  jaffe_confusion_matrix[1].print();
+  cout << "--------KDEF STATISTICS--------\n";
+  kdef_confusion_matrix[1].print();
+  cout << "--------ALL STATISTICS--------\n";
+  confusion_matrix[1].print();
+
   return 0;
 }
