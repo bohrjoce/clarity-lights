@@ -15,8 +15,8 @@ class Adaboost {
   private:
     cv::Mat data; // Rows - samples, columns - features
     std::vector<cv::Mat> labels; // Index i is Mat of binary labels for emotion i
-    std::set<int> weak_learners_indices;
   public:
+    std::set<int> weak_learners_indices;
     Adaboost(cv::Mat data_, cv::Mat labels_, unsigned int weak_learners = 82,
         bool retrain = true);
     Adaboost(std::string loadfile);

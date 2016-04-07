@@ -8,20 +8,20 @@
 #include <stdlib.h>
 #include "gabor_filter.h"
 #include "gabor_impl.h"
-
+#include <set>
 using namespace cv;
 //! [namespace]
 static const Size finalSize(448, 448);
 
 using namespace std;
-Mat ImageToFV(Mat inputImage, float stddev, int filtSize,double spacial_aspect,  bool visualize)
+Mat ImageToFV(Mat inputImage, float stddev, int filtSize,double spacial_aspect,  bool visualize, set<int> *weak_learners_indices)
 {
   Mat imageOutput;
   Mat rFilter;
   Mat iFilter;
   //we go in 1/2 octave steps, 8 different phases;
   //phase is in radians
-  Mat face = inputImage; 
+  Mat face = inputImage.clone(); 
   Mat filterOutput;
   Mat imOutput;
   Mat featureVector;
@@ -37,7 +37,7 @@ Mat ImageToFV(Mat inputImage, float stddev, int filtSize,double spacial_aspect, 
   //five wavelengths, at a half-octave increase from eachother
   //a half-octave is sqrt(2) increase
  // float wavelength[] = {4.0,5.656,8.0,11.3137,16.0 };
-  float wavelength[] = {2.0,2.828,4.0,5.656,8.0};
+  float wavelength[] = {2.0,2.828,4.0,5.0,6.5};
   
   //cout << "stddev is "<< stddev << endl;
   for (int i =0; i < 5; i++){
@@ -114,11 +114,44 @@ Mat ImageToFV(Mat inputImage, float stddev, int filtSize,double spacial_aspect, 
   //      resize(image_output, image_output, finalSize);
   if(visualize){
     imshow( "gabor_bank",image_output);
-    imshow( "face", face);
     waitKey(0); // Wait for a keystroke
   } 
+  int oldNumRows = featureVector.rows; 
+
   featureVector = featureVector.reshape(1,1);
   normalize(featureVector, featureVector, 0.0,1.0,  NORM_MINMAX, CV_32F);
 
+  if(visualize && weak_learners_indices!= NULL  ){
+    Mat visualVector;
+    featureVector.convertTo(visualVector,CV_8U,255.0);
+    cvtColor(visualVector,visualVector,CV_GRAY2RGB); 
+   for (set<int>::iterator it = weak_learners_indices->begin();
+        it != weak_learners_indices->end(); it++) {
+      visualVector.at<Vec3b>(0,(*it))[0] = 10;
+      visualVector.at<Vec3b>(0,(*it))[1] = 10;
+      visualVector.at<Vec3b>(0,(*it))[2] = 255;
+    }
+    visualVector = visualVector.reshape(0,oldNumRows);
+    Mat visualCol; 
+    Mat visualDisplay; 
+    int numIncrements = 0;
+    for(int i =0;i< oldNumRows; i+=48){
+      Mat image = visualVector(Range(i,i+47), Range::all());
+      transpose(image,image);   
+      if(numIncrements && !(numIncrements%8)){
+        transpose(visualCol,visualCol);
+        visualDisplay.push_back(visualCol);
+        visualCol.release(); 
+      }
+      visualCol.push_back(image);
+      ++numIncrements;
+    }
+
+    transpose(visualCol,visualCol);
+    visualDisplay.push_back(visualCol);
+    imshow("visualization", visualDisplay);
+
+    waitKey(0);
+  }
   return featureVector;
 }
