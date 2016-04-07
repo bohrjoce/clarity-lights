@@ -52,18 +52,16 @@ vector<double> SVMOneVsAll::raw_predict(Mat test_x) {
   return classify;
 }
 
-void SVMOneVsAll::save() {
-  string savedir = "trained_models/svm";
+void SVMOneVsAll::save(string base_dir) {
   for (unsigned int i = 0; i < svm.size(); ++i) {
-    string savefile = savedir + to_string(i) + ".xml";
+    string savefile = base_dir + to_string(i) + ".xml";
     svm[i]->save(savefile);
   }
 }
 
-void SVMOneVsAll::load() {
-  string loaddir = "trained_models/svm";
+void SVMOneVsAll::load(string base_dir) {
   for (unsigned int i = 0; i < svm.size(); ++i) {
-    string loadfile = loaddir + to_string(i) + ".xml";
+    string loadfile = base_dir + to_string(i) + ".xml";
     svm[i] = StatModel::load<SVM>(loadfile);
   }
 }

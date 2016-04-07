@@ -16,8 +16,8 @@ class SVMOneVsAll {
     void train(cv::Mat train_x, cv::Mat train_t);
     int predict(cv::Mat test_x);
     std::vector<double> raw_predict(cv::Mat test_x);
-    void save();
-    void load();
+    void save(std::string base_dir);
+    void load(std::string base_dir);
 };
 
 #endif
