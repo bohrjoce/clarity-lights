@@ -86,6 +86,12 @@ int main(int argc, char *argv[]) {
 
     svm.train(reduced_train_x, train.t);
 
+    Mat svm_features = svm.create_svm_features(reduced_train_x);
+
+
+
+
+
     for (int i = 0; i < reduced_test_x.rows; ++i) {
       int response = svm.predict(reduced_test_x.row(i));
       int truth = test.t.at<int>(i);

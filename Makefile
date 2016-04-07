@@ -33,4 +33,4 @@ take_photo: take_photo.cc preprocess.cc gabor_filter.cc gabor_impl.cc adaboost.c
 	$(CC) $(CFLAGS) take_photo.cc preprocess.cc gabor_filter.cc gabor_impl.cc adaboost.cc arduino.cc SVMOneVsAll.cc Trees.cc -std=c++11 -o $@ $(LIBS)
 
 clean:
-	rm -rf *.o svm arduino take_photo LOOCValidation KDEFValidation JAFFEValidation
+	rm -rf *.o svm arduino take_photo LOOCValidation KDEFValidation JAFFEValidation AllValidation
