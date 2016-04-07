@@ -27,10 +27,10 @@ bool Arduino::send_bytes(int fd, unsigned char bytes[], size_t nbytes) {
         spot += bytes_written;
     } while (spot < nbytes && bytes_written > 0);
     if (spot == nbytes) {
-        printf("Successful write.\n");
+        // printf("Successful write.\n");
         return true;
     } else {
-        printf("Unsuccessful write.\n");
+        // printf("Unsuccessful write.\n");
         return false;
     }
 }
@@ -43,10 +43,10 @@ bool Arduino::read_bytes(int fd, unsigned char bytes[], size_t nbytes) {
         spot += bytes_read;
     } while(spot < nbytes && bytes_read > 0);
     if (spot == nbytes) {
-        printf("Successful read.\n");
+        // printf("Successful read.\n");
         return true;
     } else {
-        printf("Unsuccessful read.\n");
+        // printf("Unsuccessful read.\n");
         return false;
     }
 }
