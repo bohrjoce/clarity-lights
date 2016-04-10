@@ -45,12 +45,15 @@ int SVMOneVsAll::predict(Mat test_x) {
 }
 
 Mat SVMOneVsAll::create_svm_features(Mat test_x) {
-  Mat svm_features = Mat(test_x.rows, NUM_EMOTIONS, CV_32F);
+  Mat svm_features = Mat(0, 0, CV_32F);
+  Mat svm_output_default = Mat(1, NUM_EMOTIONS, CV_32F);
   for (int i = 0; i < test_x.rows; ++i) {
+    Mat svm_output = svm_output_default.clone();
     for (unsigned int j = 0; j < NUM_EMOTIONS; ++j) {
-      svm_features.at<float>(i,j) 
-        = svm[j]->predict(test_x.row(i), noArray(), StatModel::RAW_OUTPUT);
+      svm_output.at<float>(0,j) = svm[j]->predict(test_x.row(i), noArray(), StatModel::RAW_OUTPUT);
     }
+    normalize(svm_output, svm_output, 0.0,1.0,  NORM_MINMAX, CV_32F);
+    svm_features.push_back(svm_output);
   }
   return svm_features;
 }

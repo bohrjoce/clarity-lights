@@ -6,6 +6,8 @@ using namespace std;
 
 Trees::Trees(){
   tree = DTrees::create();
+  tree->setMaxDepth(10);
+  tree->setCVFolds(0);
   //default is 10 max params
 }
 void Trees::train(Mat train_x, Mat train_t) {
@@ -23,6 +25,3 @@ void Trees::load(string base_dir) {
 int Trees::predict(Mat test_x) {
   return tree->predict(test_x);
 }
-
-
-
