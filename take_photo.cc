@@ -10,12 +10,13 @@
 #include "gabor_filter.h"
 #include "SVMOneVsAll.h"
 #include "arduino.h"
+#include "Trees.h"
 
 //#define TESTING
 
 using namespace std;
 
-const string webcam_pic_path = "res/webcam_pic.jpeg";
+const string webcam_pic_path = "res/webacam_pic.jpeg";
 
 int main() {
     // Set RGB vals for each emotion
@@ -118,6 +119,8 @@ int main() {
     // Load trained SVM model
     SVMOneVsAll svm;
     svm.load("trained_models/all-svm");
+    Trees tree;
+    tree.load("trained_models/all-dtree");
     Adaboost adaboost("trained_models/all-features.txt");
 
     // Set up Arduino
@@ -147,10 +150,18 @@ int main() {
           continue;
         }
         // Classify emotion
-//        Mat gabor_features = ImageToFV(webcam_pic, 2.0, 31, 2.0, true, &(adaboost.weak_learners_indices));
-        Mat gabor_features = ImageToFV(webcam_pic);
+        Mat gabor_features = ImageToFV(webcam_pic, 2.0, 31, 2.0, true, &(adaboost.weak_learners_indices));
+//        Mat gabor_features = ImageToFV(webcam_pic);
         Mat reduced_features = adaboost.reduce_features(gabor_features);
+        Mat svm_features = svm.create_svm_features(reduced_features);
         int response = svm.predict(reduced_features);
+/* // uncomment this to use decision tree
+        int response = tree.predict(svm_features);*/
+/*        vector<double> prediction = svm.raw_predict(reduced_features);
+        for (unsigned int i = 0; i < prediction.size(); ++i) {
+          cout << prediction[i] << " ";
+        }
+        cout << endl;*/
         // Set color
 /*        if (!arduino.set_color(colors[response-1])) {
             cout << "Setting color failed" << endl;
