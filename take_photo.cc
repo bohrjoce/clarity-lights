@@ -117,14 +117,16 @@ int main() {
 
 
     // Load trained SVM model
+    // all-svm/all-features.txt for normal preprocessed model
+    // tantrigg-svm/tantrigg-features.txt for tantrigg preprocess
     SVMOneVsAll svm;
-    svm.load("trained_models/all-svm");
-    Trees tree;
-    tree.load("trained_models/all-dtree");
-    Adaboost adaboost("trained_models/all-features.txt");
+    svm.load("trained_models/tantrigg-svm");
+/*    Trees tree;
+    tree.load("trained_models/preprocess-tree");*/
+    Adaboost adaboost("trained_models/tantrigg-features.txt");
 
-    // Set up Arduino
-/*    Arduino arduino;
+/*    // Set up Arduino
+    Arduino arduino;
     if (!arduino.init()) {
         cout << "Arduino not found" << endl;
         exit(1);
@@ -150,18 +152,18 @@ int main() {
           continue;
         }
         // Classify emotion
-        Mat gabor_features = ImageToFV(webcam_pic, 2.0, 31, 2.0, true, &(adaboost.weak_learners_indices));
-//        Mat gabor_features = ImageToFV(webcam_pic);
+//        Mat gabor_features = ImageToFV(webcam_pic, 2.0, 31, 2.0, true, &(adaboost.weak_learners_indices));
+        Mat gabor_features = ImageToFV(webcam_pic);
         Mat reduced_features = adaboost.reduce_features(gabor_features);
-        Mat svm_features = svm.create_svm_features(reduced_features);
         int response = svm.predict(reduced_features);
 /* // uncomment this to use decision tree
+        Mat svm_features = svm.create_svm_features(reduced_features);
         int response = tree.predict(svm_features);*/
-/*        vector<double> prediction = svm.raw_predict(reduced_features);
+        vector<double> prediction = svm.raw_predict(reduced_features);
         for (unsigned int i = 0; i < prediction.size(); ++i) {
           cout << prediction[i] << " ";
         }
-        cout << endl;*/
+        cout << endl;
         // Set color
 /*        if (!arduino.set_color(colors[response-1])) {
             cout << "Setting color failed" << endl;
